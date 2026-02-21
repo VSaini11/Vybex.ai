@@ -23,7 +23,7 @@ export default function VideoShowcase() {
                             muted
                             playsInline
                             className="w-full h-full object-cover"
-                            
+
                         >
                             <source src="/animation.mp4" type="video/mp4" />
                             Your browser does not support the video tag.
