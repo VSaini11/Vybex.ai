@@ -23,7 +23,7 @@ export default function VideoShowcase() {
                             muted
                             playsInline
                             className="w-full h-full object-cover"
-                            poster="https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&q=80&w=1920"
+                            
                         >
                             <source src="/animation.mp4" type="video/mp4" />
                             Your browser does not support the video tag.
