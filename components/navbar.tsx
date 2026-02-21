@@ -14,10 +14,20 @@ const NAV_LINKS = [
 export default function Navbar() {
     const [scrolled, setScrolled] = useState(false)
     const [mobileOpen, setMobileOpen] = useState(false)
+    const [user, setUser] = useState<any>(null)
 
     useEffect(() => {
         const onScroll = () => setScrolled(window.scrollY > 20)
         window.addEventListener('scroll', onScroll, { passive: true })
+
+        // Check auth status
+        fetch('/api/auth/me')
+            .then(res => res.json())
+            .then(data => {
+                if (data.user) setUser(data.user)
+            })
+            .catch(() => { })
+
         return () => window.removeEventListener('scroll', onScroll)
     }, [])
 
@@ -73,19 +83,31 @@ export default function Navbar() {
 
                     {/* Desktop CTA */}
                     <div className="hidden md:flex items-center gap-3">
-                        <a
-                            href="#"
-                            className="text-sm text-muted-foreground hover:text-foreground transition-colors duration-150"
-                        >
-                            Sign in
-                        </a>
-                        <a
-                            href="#"
-                            className="px-4 py-2 rounded-xl text-sm font-semibold text-background transition-all duration-200 hover:scale-105"
-                            style={{ background: '#00ff41', boxShadow: '0 0 18px rgba(0,255,65,0.25)' }}
-                        >
-                            Get Started
-                        </a>
+                        {user ? (
+                            <a
+                                href="/dashboard"
+                                className="px-4 py-2 rounded-xl text-sm font-semibold text-background transition-all duration-200 hover:scale-105 flex items-center gap-2"
+                                style={{ background: '#00ff41', boxShadow: '0 0 18px rgba(0,255,65,0.25)' }}
+                            >
+                                Dashboard
+                            </a>
+                        ) : (
+                            <>
+                                <a
+                                    href="/login"
+                                    className="text-sm text-muted-foreground hover:text-foreground transition-colors duration-150"
+                                >
+                                    Sign in
+                                </a>
+                                <a
+                                    href="/signup"
+                                    className="px-4 py-2 rounded-xl text-sm font-semibold text-background transition-all duration-200 hover:scale-105"
+                                    style={{ background: '#00ff41', boxShadow: '0 0 18px rgba(0,255,65,0.25)' }}
+                                >
+                                    Get Started
+                                </a>
+                            </>
+                        )}
                     </div>
 
                     {/* Mobile hamburger */}
@@ -125,16 +147,34 @@ export default function Navbar() {
                                     </a>
                                 ))}
                                 <div className="h-px bg-border/30 my-2" />
-                                <a href="#" className="px-4 py-3 rounded-xl text-sm text-muted-foreground hover:text-foreground hover:bg-white/5 transition-all">
-                                    Sign in
-                                </a>
-                                <a
-                                    href="#"
-                                    className="mt-1 px-4 py-3 rounded-xl text-sm font-semibold text-background text-center transition-all"
-                                    style={{ background: '#00ff41' }}
-                                >
-                                    Get Started
-                                </a>
+                                {user ? (
+                                    <a
+                                        href="/dashboard"
+                                        className="mt-1 px-4 py-3 rounded-xl text-sm font-semibold text-background text-center transition-all"
+                                        style={{ background: '#00ff41' }}
+                                        onClick={() => setMobileOpen(false)}
+                                    >
+                                        Dashboard
+                                    </a>
+                                ) : (
+                                    <>
+                                        <a
+                                            href="/login"
+                                            className="px-4 py-3 rounded-xl text-sm text-muted-foreground hover:text-foreground hover:bg-white/5 transition-all"
+                                            onClick={() => setMobileOpen(false)}
+                                        >
+                                            Sign in
+                                        </a>
+                                        <a
+                                            href="/signup"
+                                            className="mt-1 px-4 py-3 rounded-xl text-sm font-semibold text-background text-center transition-all"
+                                            style={{ background: '#00ff41' }}
+                                            onClick={() => setMobileOpen(false)}
+                                        >
+                                            Get Started
+                                        </a>
+                                    </>
+                                )}
                             </div>
                         </motion.div>
                     )}

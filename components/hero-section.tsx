@@ -2,7 +2,11 @@
 
 import { motion } from 'framer-motion'
 import { useState, useRef } from 'react'
-import { ArrowUp, Star } from 'lucide-react'
+import { ArrowUp } from 'lucide-react'
+
+interface HeroSectionProps {
+  onGenerate?: (prompt: string) => void
+}
 
 const MAX_CHARS = 1800
 
@@ -13,7 +17,7 @@ const AVATARS = [
   'https://i.pravatar.cc/40?img=4',
 ]
 
-export default function HeroSection() {
+export default function HeroSection({ onGenerate }: HeroSectionProps) {
   const [prompt, setPrompt] = useState('')
   const textareaRef = useRef<HTMLTextAreaElement>(null)
 
@@ -67,28 +71,31 @@ export default function HeroSection() {
 
         {/* Social proof strip */}
         <motion.div
-          className="flex items-center justify-center gap-3 mb-8"
+          className="flex flex-col md:flex-row items-center justify-center gap-4 mb-10"
           initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.7, delay: 0.15 }}
         >
-          {/* Avatar stack */}
-          <div className="flex -space-x-2">
-            {AVATARS.map((src, i) => (
-              <img
-                key={i}
-                src={src}
-                alt="user avatar"
-                className="w-8 h-8 rounded-full border-2 border-card object-cover"
-              />
-            ))}
+          <div className="flex items-center gap-3">
+            {/* Avatar stack */}
+            <div className="flex -space-x-2">
+              {AVATARS.map((src, i) => (
+                <img
+                  key={i}
+                  src={src}
+                  alt="user avatar"
+                  className="w-8 h-8 rounded-full border-2 border-card object-cover"
+                />
+              ))}
+            </div>
+            <span className="text-sm font-semibold text-foreground">170+</span>
           </div>
-          <span className="text-sm font-semibold text-foreground">170+</span>
 
           {/* Pill badge */}
-          <div className="flex items-center gap-1.5 border border-border bg-card/60 backdrop-blur-sm rounded-full px-4 py-1.5 text-sm text-muted-foreground">
-            <span className="text-accent font-semibold">3.5 MILLION+</span>
-            <span>Sites have been built with our AI builder</span>
+          <div className="flex flex-wrap items-center justify-center gap-1.5 border border-border bg-card/60 backdrop-blur-sm rounded-full px-4 py-2 text-xs sm:text-sm text-muted-foreground text-center">
+            <span className="text-accent font-semibold whitespace-nowrap">3.5 MILLION+</span>
+            <span className="hidden sm:inline">Sites have been built with our AI builder</span>
+            <span className="sm:hidden text-[11px]">Sites built with AI</span>
           </div>
         </motion.div>
 
@@ -107,14 +114,14 @@ export default function HeroSection() {
               value={prompt}
               onChange={e => setPrompt(e.target.value.slice(0, MAX_CHARS))}
               placeholder="Describe your startup, the problem you solve, your target audience, and key features…"
-              className="w-full bg-transparent text-foreground placeholder:text-muted-foreground/50 resize-none outline-none px-6 pt-6 pb-4 text-base leading-relaxed min-h-[140px]"
+              className="w-full bg-transparent text-foreground placeholder:text-muted-foreground/50 resize-none outline-none px-6 pt-6 pb-4 text-base leading-relaxed min-h-[160px] md:min-h-[140px]"
               rows={5}
             />
 
             {/* Bottom bar */}
-            <div className="flex items-center justify-between px-6 py-4 border-t border-border/60">
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4 px-6 py-4 border-t border-border/60">
               {/* Language badge */}
-              <div className="flex items-center gap-2">
+              <div className="flex items-center justify-between sm:justify-start gap-2">
                 <span className="text-xs text-muted-foreground font-medium">Language:</span>
                 <div className="flex items-center gap-1.5 border border-border bg-background/60 rounded-lg px-3 py-1.5 text-sm text-foreground cursor-pointer hover:border-accent/40 transition-colors">
                   English
@@ -125,12 +132,13 @@ export default function HeroSection() {
               </div>
 
               {/* Char count + button */}
-              <div className="flex items-center gap-4">
+              <div className="flex items-center justify-between sm:justify-end gap-4">
                 <span className="text-xs text-muted-foreground tabular-nums">
                   {prompt.length}/{MAX_CHARS}
                 </span>
                 <button
-                  className="flex items-center gap-2 px-5 py-2 rounded-xl bg-accent text-background font-semibold text-sm hover:bg-accent/90 transition-all duration-200 hover:scale-105 active:scale-95 shadow-lg"
+                  onClick={() => onGenerate?.(prompt)}
+                  className="flex items-center justify-center gap-2 px-6 py-2.5 rounded-xl bg-accent text-background font-semibold text-sm hover:bg-accent/90 transition-all duration-200 hover:scale-105 active:scale-95 shadow-lg flex-1 sm:flex-initial"
                   style={{ boxShadow: '0 0 20px rgba(0,255,65,0.3)' }}
                 >
                   Generate Now
@@ -140,6 +148,7 @@ export default function HeroSection() {
             </div>
           </div>
         </motion.div>
+
 
 
 
