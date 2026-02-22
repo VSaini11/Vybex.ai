@@ -14,6 +14,8 @@ export default function VyanaAssistant({ onTranscript, onGenerate }: VyanaAssist
     const [isSpeaking, setIsSpeaking] = useState(false)
     const recognitionRef = useRef<any>(null)
     const isActuallyListening = useRef(false)
+    const isManualStopRef = useRef(false)
+    const processedTranscriptRef = useRef('')
     const voicesLoaded = useRef(false)
     const silenceTimeoutRef = useRef<NodeJS.Timeout | null>(null)
 
@@ -27,13 +29,13 @@ export default function VyanaAssistant({ onTranscript, onGenerate }: VyanaAssist
     }, [onTranscript, onGenerate])
 
     const stopListening = useCallback(() => {
+        isManualStopRef.current = true
         if (recognitionRef.current && isActuallyListening.current) {
             recognitionRef.current.stop()
-            // Cleanup timer immediately
-            if (silenceTimeoutRef.current) {
-                clearTimeout(silenceTimeoutRef.current)
-                silenceTimeoutRef.current = null
-            }
+        }
+        if (silenceTimeoutRef.current) {
+            clearTimeout(silenceTimeoutRef.current)
+            silenceTimeoutRef.current = null
         }
         if (window.speechSynthesis) {
             window.speechSynthesis.cancel()
@@ -46,7 +48,7 @@ export default function VyanaAssistant({ onTranscript, onGenerate }: VyanaAssist
         }
         silenceTimeoutRef.current = setTimeout(() => {
             if (isActuallyListening.current) {
-                console.log('Silence detected, triggering auto-generate...')
+                console.log('Vyana silence timeout reached...')
                 speak("I've finished recording. Starting generation now.")
                 stopListening()
                 setTimeout(() => {
@@ -55,8 +57,6 @@ export default function VyanaAssistant({ onTranscript, onGenerate }: VyanaAssist
             }
         }, 5000) // Increased to 5 seconds for better UX
     }, [stopListening])
-
-    const lastResultIndex = useRef(-1)
 
     useEffect(() => {
         const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition
@@ -68,43 +68,47 @@ export default function VyanaAssistant({ onTranscript, onGenerate }: VyanaAssist
 
             recognitionInstance.onstart = () => {
                 isActuallyListening.current = true
+                isManualStopRef.current = false
+                processedTranscriptRef.current = ''
                 setIsListening(true)
                 resetSilenceTimer()
-                lastResultIndex.current = -1 // Reset on start
             }
 
             recognitionInstance.onresult = (event: any) => {
                 resetSilenceTimer()
-                let finalTranscriptChunk = ''
 
-                // Mobile browsers often repeat previous results. 
-                // We track lastResultIndex to only process new "final" results.
-                for (let i = event.resultIndex; i < event.results.length; ++i) {
-                    if (event.results[i].isFinal && i > lastResultIndex.current) {
-                        finalTranscriptChunk += event.results[i][0].transcript
-                        lastResultIndex.current = i
+                let currentFullFinal = ''
+                for (let i = 0; i < event.results.length; ++i) {
+                    if (event.results[i].isFinal) {
+                        currentFullFinal += event.results[i][0].transcript
                     }
                 }
 
-                if (finalTranscriptChunk) {
-                    const text = finalTranscriptChunk.trim()
-                    onTranscriptRef.current(text)
+                currentFullFinal = currentFullFinal.trim()
 
-                    const lowerTranscript = text.toLowerCase()
-                    if (lowerTranscript.includes('generate') ||
-                        lowerTranscript.includes('build it') ||
-                        lowerTranscript.includes('create it')) {
-
-                        onGenerateRef.current(text.replace(/generate|build it|create it/gi, '').trim())
-                        speak("Understood. I am building it for you now.")
-                        stopListening()
+                // Check for new content compared to what we've previously "emitted"
+                if (currentFullFinal.length > processedTranscriptRef.current.length) {
+                    const newChunk = currentFullFinal.slice(processedTranscriptRef.current.length).trim()
+                    if (newChunk) {
+                        onTranscriptRef.current(newChunk)
+                        processedTranscriptRef.current = currentFullFinal
                     }
+                }
+
+                // Keyword detection on the accumulated transcript
+                const lowerFull = currentFullFinal.toLowerCase()
+                const triggers = ['generate', 'build it', 'create it']
+                if (triggers.some(t => lowerFull.includes(t))) {
+                    const cleanPrompt = lowerFull.replace(/generate|build it|create it/gi, '').trim()
+                    onGenerateRef.current(cleanPrompt)
+                    speak("Understood. I am building it for you now.")
+                    stopListening()
                 }
             }
 
             recognitionInstance.onerror = (event: any) => {
                 if (event.error === 'aborted') return
-                console.error('Speech recognition error:', event.error)
+                console.error('Vyana hearing error:', event.error)
                 setIsListening(false)
                 isActuallyListening.current = false
                 if (silenceTimeoutRef.current) clearTimeout(silenceTimeoutRef.current)
@@ -112,7 +116,19 @@ export default function VyanaAssistant({ onTranscript, onGenerate }: VyanaAssist
 
             recognitionInstance.onend = () => {
                 setIsListening(false)
+
+                // On mobile, browsers often stop due to silence (dropout)
+                // If it wasn't a manual stop and we have some content, trigger generation
+                if (!isManualStopRef.current && processedTranscriptRef.current) {
+                    console.log('Mobile dropout detected, auto-triggering generation...')
+                    speak("I've finished recording. Starting generation now.")
+                    setTimeout(() => {
+                        onGenerateRef.current('')
+                    }, 500)
+                }
+
                 isActuallyListening.current = false
+                isManualStopRef.current = false
                 if (silenceTimeoutRef.current) clearTimeout(silenceTimeoutRef.current)
             }
 
