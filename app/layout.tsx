@@ -9,7 +9,7 @@ const _geistMono = Geist_Mono({ subsets: ["latin"] });
 export const metadata: Metadata = {
   title: 'Vybex.ai - Build Your Landing Page in 5 Minutes',
   description: 'AI-powered landing page generator that builds conversion-ready Next.js + Tailwind landing pages in minutes',
-  generator: 'v0.app',
+  manifest: '/manifest.json',
   icons: {
     icon: [
       {

@@ -1,0 +1,16 @@
+{
+    "name": "Vybex.ai",
+    "short_name": "Vybex",
+    "description": "AI-powered landing page generator",
+    "start_url": "/",
+    "display": "standalone",
+    "background_color": "#000000",
+    "theme_color": "#00ff41",
+    "icons": [
+        {
+            "src": "/icon.svg",
+            "sizes": "192x192",
+            "type": "image/svg+xml"
+        }
+    ]
+}
