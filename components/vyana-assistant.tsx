@@ -56,6 +56,8 @@ export default function VyanaAssistant({ onTranscript, onGenerate }: VyanaAssist
         }, 5000) // Increased to 5 seconds for better UX
     }, [stopListening])
 
+    const lastResultIndex = useRef(-1)
+
     useEffect(() => {
         const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition
         if (SpeechRecognition) {
@@ -68,26 +70,32 @@ export default function VyanaAssistant({ onTranscript, onGenerate }: VyanaAssist
                 isActuallyListening.current = true
                 setIsListening(true)
                 resetSilenceTimer()
+                lastResultIndex.current = -1 // Reset on start
             }
 
             recognitionInstance.onresult = (event: any) => {
                 resetSilenceTimer()
-                let interimTranscript = ''
-                let finalTranscript = ''
+                let finalTranscriptChunk = ''
 
+                // Mobile browsers often repeat previous results. 
+                // We track lastResultIndex to only process new "final" results.
                 for (let i = event.resultIndex; i < event.results.length; ++i) {
-                    if (event.results[i].isFinal) {
-                        finalTranscript += event.results[i][0].transcript
-                    } else {
-                        interimTranscript += event.results[i][0].transcript
+                    if (event.results[i].isFinal && i > lastResultIndex.current) {
+                        finalTranscriptChunk += event.results[i][0].transcript
+                        lastResultIndex.current = i
                     }
                 }
 
-                if (finalTranscript) {
-                    onTranscriptRef.current(finalTranscript)
-                    const lowerTranscript = finalTranscript.toLowerCase()
-                    if (lowerTranscript.includes('generate') || lowerTranscript.includes('build it') || lowerTranscript.includes('create it')) {
-                        onGenerateRef.current(finalTranscript.replace(/generate|build it|create it/gi, '').trim())
+                if (finalTranscriptChunk) {
+                    const text = finalTranscriptChunk.trim()
+                    onTranscriptRef.current(text)
+
+                    const lowerTranscript = text.toLowerCase()
+                    if (lowerTranscript.includes('generate') ||
+                        lowerTranscript.includes('build it') ||
+                        lowerTranscript.includes('create it')) {
+
+                        onGenerateRef.current(text.replace(/generate|build it|create it/gi, '').trim())
                         speak("Understood. I am building it for you now.")
                         stopListening()
                     }
@@ -132,14 +140,17 @@ export default function VyanaAssistant({ onTranscript, onGenerate }: VyanaAssist
         // Highly prioritized list for a "beautiful, clear, futuristic" feminine voice
         const voices = window.speechSynthesis.getVoices()
         const priorityPatterns = [
-            'Google UK English Female', // Very clear/high quality in Chrome
+            'Google UK English Female',
             'Google US English Female',
-            'Microsoft Aria Online (Natural)', // Very smooth in Edge
+            'Microsoft Aria Online (Natural)',
             'Microsoft Jenny Online (Natural)',
             'Microsoft Sonia Online (Natural)',
-            'Samantha', // Classic clear Apple voice
-            'Victoria', // Mature clear Apple voice
-            'Microsoft Zira' // Classic Windows Female
+            'Samantha',
+            'Victoria',
+            'Apple Moira', // Mobile fallback
+            'Apple Karen',  // Mobile fallback
+            'English (United Kingdom)-en-GB-Standard-A', // Common mobile voice
+            'Microsoft Zira'
         ]
 
         let selectedVoice = null
@@ -155,7 +166,8 @@ export default function VyanaAssistant({ onTranscript, onGenerate }: VyanaAssist
             selectedVoice = voices.find(v =>
                 (v.name.toLowerCase().includes('female') ||
                     v.name.toLowerCase().includes('woman') ||
-                    v.name.toLowerCase().includes('natural')) &&
+                    v.name.toLowerCase().includes('natural') ||
+                    v.name.toLowerCase().includes('girl')) &&
                 !v.name.toLowerCase().includes('male')
             )
         }
@@ -167,8 +179,8 @@ export default function VyanaAssistant({ onTranscript, onGenerate }: VyanaAssist
         // ─────────────────────────────────────────────────────────────
         // "FUTURISTIC" TUNING
         // ─────────────────────────────────────────────────────────────
-        utterance.pitch = 1.25 // Slightly higher for a youthful/energetic 'AI girl' feel
-        utterance.rate = 1.05  // Slightly faster for a crisp, intelligent AI response
+        utterance.pitch = 1.25
+        utterance.rate = 1.05
         utterance.volume = 1.0
 
         utterance.onstart = () => setIsSpeaking(true)
