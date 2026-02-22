@@ -60,7 +60,7 @@ export default function Home() {
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <button className="flex items-center gap-2 px-8 py-4 rounded-xl bg-green-400 text-black font-semibold text-base hover:bg-green-300 transition-all duration-200">
-              Get Started Free <ArrowRight className="w-5 h-5" />
+              Get Started <ArrowRight className="w-5 h-5" />
             </button>
             <button className="flex items-center gap-2 px-8 py-4 rounded-xl border border-white/10 text-white font-semibold text-base hover:border-white/30 transition-all duration-200">
               View Demo
@@ -187,26 +187,49 @@ export function useBuilder() {
     activeFilePath: null,
     openTabs: [],
     isLoading: false,
+    status: null,
     error: null,
   })
   const [prompt, setPromptState] = useState('')
 
   const generate = useCallback(async (p: string) => {
-    setState(s => ({ ...s, isLoading: true, error: null }))
+    setState(s => ({ ...s, isLoading: true, status: 'Generating folder structure...', error: null }))
     setPromptState(p)
 
     try {
-      const response = await fetch('/api/generate', {
+      const steps = [
+        'Generating folder structure...',
+        'Writing page.tsx...',
+        'Adding components...',
+        'Styling with Tailwind...',
+        'Finalizing UI elements...'
+      ]
+
+      // Start the actual generation
+      const apiPromise = fetch('/api/generate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ prompt: p }),
       })
 
+      // Show some initial steps
+      for (let i = 0; i < 3; i++) {
+        await new Promise(r => setTimeout(r, 600))
+        setState(s => ({ ...s, status: steps[i] }))
+      }
+
+      const response = await apiPromise
       const data = await response.json()
 
       if (!response.ok) {
-        setState(s => ({ ...s, isLoading: false, error: data.error || 'Failed to generate project' }))
+        setState(s => ({ ...s, isLoading: false, status: null, error: data.error || 'Failed to generate project' }))
         return
+      }
+
+      // Finish remaining steps
+      for (let i = 3; i < steps.length; i++) {
+        setState(s => ({ ...s, status: steps[i] }))
+        await new Promise(r => setTimeout(r, 400))
       }
 
       setState({
@@ -214,11 +237,12 @@ export function useBuilder() {
         activeFilePath: 'app/page.tsx',
         openTabs: ['app/page.tsx'],
         isLoading: false,
+        status: null,
         error: null,
       })
     } catch (err: any) {
       console.error('Generation failure:', err)
-      setState(s => ({ ...s, isLoading: false, error: err.message || 'Service unavailable' }))
+      setState(s => ({ ...s, isLoading: false, status: null, error: err.message || 'Service unavailable' }))
     }
   }, [])
 
@@ -264,6 +288,7 @@ export function useBuilder() {
       activeFilePath: null,
       openTabs: [],
       isLoading: false,
+      status: null,
       error: null,
     })
     setPromptState('')

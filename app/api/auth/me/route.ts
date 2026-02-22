@@ -21,6 +21,32 @@ export async function GET(req: NextRequest) {
             return NextResponse.json({ error: 'User not found' }, { status: 404 });
         }
 
+        // Auto-heal existing user limits
+        let hasChanges = false;
+        if (user.plan === 'free') {
+            if (user.monthlyGenerationLimit !== 7) {
+                user.monthlyGenerationLimit = 7;
+                hasChanges = true;
+            }
+            if (user.dailyGenerationLimit !== 3) {
+                user.dailyGenerationLimit = 3;
+                hasChanges = true;
+            }
+        } else if (user.plan === 'none') {
+            if (user.monthlyGenerationLimit !== 0) {
+                user.monthlyGenerationLimit = 0;
+                hasChanges = true;
+            }
+            if (user.dailyGenerationLimit !== 0) {
+                user.dailyGenerationLimit = 0;
+                hasChanges = true;
+            }
+        }
+
+        if (hasChanges) {
+            await user.save();
+        }
+
         return NextResponse.json({ user });
     } catch (error: any) {
         console.error('Me error:', error);

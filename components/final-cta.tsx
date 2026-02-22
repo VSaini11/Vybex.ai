@@ -9,18 +9,18 @@ const LINKS = {
   ],
   COMPANY: [
     { label: 'About', href: '#' },
-    { label: 'Careers', href: '#' },
+    { label: 'Join Us', href: '/join-us' },
     { label: 'Contact', href: '#' },
   ],
   RESOURCES: [
-    { label: 'Documentation', href: '#' },
-    { label: 'Community', href: '#' },
+    { label: 'Documentation', href: '/docs' },
+    { label: 'Community', href: '/community' },
   ],
   LEGAL: [
-    { label: 'Privacy Policy', href: '#' },
-    { label: 'Terms of Service', href: '#' },
-    { label: 'Cookie Policy', href: '#' },
-    { label: 'License', href: '#' },
+    { label: 'Privacy Policy', href: '/privacy' },
+    { label: 'Terms of Service', href: '/terms' },
+    { label: 'Cookie Policy', href: '/cookies' },
+    { label: 'License', href: '/license' },
   ],
 }
 
@@ -59,7 +59,7 @@ export default function FinalCTA() {
                 className="px-5 py-2.5 rounded-lg bg-accent text-background text-sm font-semibold hover:bg-accent/90 transition-all duration-200 text-left"
                 style={{ boxShadow: '0 0 20px rgba(0,255,65,0.2)' }}
               >
-                Get Started Free
+                Get Started
               </button>
               <button className="px-5 py-2.5 rounded-lg border border-border text-muted-foreground text-sm font-semibold hover:border-accent/40 hover:text-foreground transition-all duration-200 text-left">
                 Contact Us
@@ -96,6 +96,27 @@ export default function FinalCTA() {
             ))}
           </div>
         </div>
+
+        {/* Join Us section */}
+        <motion.div
+          className="mt-16 pt-8 border-t border-border/20"
+          initial={{ opacity: 0, y: 16 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, delay: 0.3 }}
+          viewport={{ once: true }}
+        >
+          <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+            <div>
+              <h4 className="text-sm font-semibold text-foreground mb-1">Join Us</h4>
+              <p className="text-sm text-muted-foreground">
+                Want to build the future of AI-powered products?
+                <span className="block md:inline ml-0 md:ml-1">
+                  Drop your portfolio at <a href="mailto:hello@vybex.ai" className="text-accent hover:underline">hello@vybex.ai</a> ↗
+                </span>
+              </p>
+            </div>
+          </div>
+        </motion.div>
       </div>
 
       {/* Bottom bar */}

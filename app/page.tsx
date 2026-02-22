@@ -16,6 +16,7 @@ export default function Home() {
     activeFilePath,
     openTabs,
     isLoading,
+    status,
     error,
     generate,
     setActiveFile,
@@ -48,6 +49,7 @@ export default function Home() {
             activeFilePath={activeFilePath}
             openTabs={openTabs}
             isLoading={isLoading}
+            status={status}
             error={error}
             onSelectFile={setActiveFile}
             onTabClick={setActiveFile}

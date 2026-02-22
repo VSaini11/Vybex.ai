@@ -17,5 +17,6 @@ export interface BuilderState {
     activeFilePath: string | null
     openTabs: string[]
     isLoading: boolean
+    status: string | null
     error: string | null
 }

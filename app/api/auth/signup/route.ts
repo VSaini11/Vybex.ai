@@ -24,10 +24,13 @@ export async function POST(req: NextRequest) {
         const user = await User.create({
             email,
             password: hashedPassword,
-            plan: 'free',
+            plan: 'none',
             generationsUsed: 0,
-            monthlyGenerationLimit: 3,
+            dailyGenerationsUsed: 0,
+            monthlyGenerationLimit: 0,
+            dailyGenerationLimit: 0,
             lastResetDate: new Date(),
+            lastDailyResetDate: new Date(),
         });
 
         const token = signToken({ userId: user._id, email: user.email });

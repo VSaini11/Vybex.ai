@@ -158,10 +158,10 @@ export default function DashboardPage() {
                                     <p className="text-[9px] md:text-[10px] font-black uppercase tracking-[0.3em] text-zinc-500 mb-2">Active Power Level</p>
                                     <div className="flex items-center gap-3">
                                         <h2 className="text-3xl md:text-4xl font-black tracking-tighter capitalize text-white leading-none">
-                                            {user.plan === 'free' ? 'Starter' : user.plan.replace('_', ' ')}
+                                            {user.plan === 'none' ? 'No Plan' : (user.plan === 'free' ? 'Starter' : user.plan.replace('_', ' '))}
                                         </h2>
-                                        <span className="flex items-center gap-1.5 text-green-400 font-black text-[9px] md:text-[10px] bg-green-400/10 px-2.5 py-1 rounded-full border border-green-400/20">
-                                            <span className="h-1.5 w-1.5 rounded-full bg-green-400 animate-pulse" /> ACTIVE
+                                        <span className={`flex items-center gap-1.5 font-black text-[9px] md:text-[10px] px-2.5 py-1 rounded-full border ${user.plan === 'none' ? 'text-zinc-500 bg-zinc-500/10 border-zinc-500/20' : 'text-green-400 bg-green-400/10 border-green-400/20'}`}>
+                                            <span className={`h-1.5 w-1.5 rounded-full ${user.plan === 'none' ? 'bg-zinc-500' : 'bg-green-400 animate-pulse'}`} /> {user.plan === 'none' ? 'INACTIVE' : 'ACTIVE'}
                                         </span>
                                     </div>
                                 </div>
@@ -169,24 +169,55 @@ export default function DashboardPage() {
                                 {/* Usage Stats (Progress) */}
                                 <div className="flex-1 p-6 md:p-10 flex flex-col justify-center">
                                     <div className="flex flex-col sm:flex-row sm:justify-between sm:items-end mb-4 gap-4 sm:gap-0">
-                                        <div className="flex items-baseline gap-2">
-                                            <span className="text-2xl md:text-3xl font-black text-white tabular-nums">{user.generationsUsed}</span>
-                                            <span className="text-zinc-600 text-xs md:text-sm font-bold uppercase tracking-widest">/ {user.monthlyGenerationLimit} CREDITS</span>
+                                        <div className="flex flex-col">
+                                            <p className="text-[9px] font-black uppercase tracking-[0.2em] text-zinc-500 mb-1">Monthly Budget</p>
+                                            <div className="flex items-baseline gap-2">
+                                                <span className="text-2xl md:text-3xl font-black text-white tabular-nums">{user.generationsUsed}</span>
+                                                <span className="text-zinc-600 text-xs md:text-sm font-bold uppercase tracking-widest">/ {user.monthlyGenerationLimit} CREDITS</span>
+                                            </div>
                                         </div>
-                                        <p className="text-[10px] md:text-xs font-black uppercase tracking-widest text-green-400">
-                                            {Math.max(0, user.monthlyGenerationLimit - user.generationsUsed)} REMAINING
-                                        </p>
+                                        <div className="text-right">
+                                            <p className="text-[10px] md:text-xs font-black uppercase tracking-widest text-green-400 mb-1">
+                                                {Math.max(0, user.monthlyGenerationLimit - user.generationsUsed)} REMAINING
+                                            </p>
+                                            {(user.plan === 'free' || user.plan === 'none') && (
+                                                <p className="text-[9px] font-bold text-zinc-500 uppercase tracking-wider">
+                                                    Daily Cap: <span className="text-zinc-300">{user.dailyGenerationsUsed}/{user.dailyGenerationLimit}</span>
+                                                </p>
+                                            )}
+                                        </div>
                                     </div>
-                                    <div className="relative h-2 w-full bg-zinc-950 rounded-full overflow-hidden border border-white/5">
+                                    <div className="relative h-2 w-full bg-zinc-950 rounded-full overflow-hidden border border-white/5 mb-2">
                                         <motion.div className="absolute top-0 left-0 h-full bg-gradient-to-r from-green-600 to-green-400" initial={{ width: 0 }} animate={{ width: `${usagePercent}%` }} transition={{ duration: 1.5, ease: 'expoOut' }} />
                                     </div>
+                                    {(user.plan === 'free' || user.plan === 'none') && (
+                                        <div className="flex items-center gap-2">
+                                            <div className="flex-1 h-1 bg-zinc-950 rounded-full overflow-hidden">
+                                                <motion.div
+                                                    className="h-full bg-zinc-500"
+                                                    initial={{ width: 0 }}
+                                                    animate={{ width: user.dailyGenerationLimit > 0 ? `${(user.dailyGenerationsUsed / user.dailyGenerationLimit) * 100}%` : '0%' }}
+                                                />
+                                            </div>
+                                            <span className="text-[8px] font-black uppercase text-zinc-600 tracking-tighter">Daily Usage</span>
+                                        </div>
+                                    )}
                                 </div>
 
                                 {/* Quick Action Button */}
-                                <div className="p-6 md:p-10 border-t md:border-t-0 md:border-l border-white/5 flex items-center justify-center">
-                                    <Button onClick={() => router.push('/')} className="w-full md:w-auto h-12 md:h-14 px-8 bg-white text-black hover:bg-zinc-100 font-black text-xs md:text-sm uppercase tracking-[0.2em] group transition-all">
+                                <div className="p-6 md:p-10 border-t md:border-t-0 md:border-l border-white/5 flex flex-col items-center justify-center gap-3">
+                                    <Button
+                                        disabled={user.plan === 'none'}
+                                        onClick={() => router.push('/')}
+                                        className={`w-full md:w-auto h-12 md:h-14 px-8 bg-white text-black hover:bg-zinc-100 font-black text-xs md:text-sm uppercase tracking-[0.2em] group transition-all ${user.plan === 'none' ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                    >
                                         GO TO EDITOR <ArrowRight className="ml-2 h-4 w-4 group-hover:translate-x-1 transition-transform" />
                                     </Button>
+                                    {user.plan === 'none' && (
+                                        <p className="text-[9px] font-bold text-red-500/80 uppercase tracking-widest text-center">
+                                            Plan required to access editor
+                                        </p>
+                                    )}
                                 </div>
                             </div>
                         </CardContent>
@@ -221,7 +252,47 @@ export default function DashboardPage() {
                 </div>
 
                 {/* SIDE-BY-SIDE PRICING GRID */}
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-6 md:gap-8 items-stretch">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8 items-stretch">
+
+                    {/* Starter Plan Card */}
+                    <motion.div initial={{ opacity: 0, scale: 0.98 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: 0.1 }}>
+                        <Card className={`border-green-500/20 bg-zinc-900 shadow-2xl relative overflow-hidden h-full flex flex-col transition-all ${user.plan === 'free' ? 'opacity-50 grayscale select-none pointer-events-none' : ''}`}>
+                            <CardHeader className="p-6 md:p-8 pb-4">
+                                <div className="flex flex-col gap-1 mb-4 md:mb-6">
+                                    <span className="text-zinc-500 text-[9px] md:text-[10px] font-black uppercase tracking-[0.3em]">Entry Level</span>
+                                    <div className="flex items-baseline gap-1">
+                                        <CardTitle className="text-white text-4xl md:text-5xl font-black tracking-tighter">Starter</CardTitle>
+                                        <span className="text-zinc-600 ml-2 font-black text-xs md:text-sm">₹1/mo</span>
+                                    </div>
+                                </div>
+                            </CardHeader>
+                            <CardContent className="p-6 md:p-8 pt-0 flex-1 flex flex-col justify-between">
+                                <div className="space-y-6">
+                                    <div className="h-px bg-white/5" />
+                                    <ul className="space-y-3 md:space-y-4">
+                                        {[
+                                            '7 generations per month',
+                                            'Max 3 generations per day',
+                                            'Standard theme access',
+                                            'Basic AI logic',
+                                            'Community support'
+                                        ].map((item, i) => (
+                                            <li key={i} className="flex items-center gap-3 text-xs md:text-sm font-bold text-zinc-300">
+                                                <Check className="h-3.5 w-3.5 md:h-4 md:w-4 text-green-500 flex-shrink-0" /> {item}
+                                            </li>
+                                        ))}
+                                    </ul>
+                                </div>
+                                <Button
+                                    disabled={checkoutLoading || user.plan !== 'none'}
+                                    onClick={() => handleUpgrade('free')}
+                                    className="w-full h-12 md:h-14 bg-white/10 hover:bg-white/20 text-white font-black text-xs md:text-sm uppercase tracking-[0.2em] mt-8 md:mt-10 transition-all"
+                                >
+                                    {checkoutLoading && upgrading === 'free' ? <Loader2 className="animate-spin h-5 w-5" /> : user.plan === 'free' ? 'ACTIVE' : 'ACTIVATE STARTER'}
+                                </Button>
+                            </CardContent>
+                        </Card>
+                    </motion.div>
 
                     {/* Pro Plan Card */}
                     <motion.div initial={{ opacity: 0, scale: 0.98 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: 0.2 }}>
@@ -255,7 +326,7 @@ export default function DashboardPage() {
                                     </ul>
                                 </div>
                                 <Button
-                                    disabled={checkoutLoading || user.plan !== 'free'}
+                                    disabled={checkoutLoading || (user.plan !== 'free' && user.plan !== 'none')}
                                     onClick={() => handleUpgrade('pro')}
                                     className="w-full h-12 md:h-14 bg-green-500 hover:bg-green-400 text-black font-black text-xs md:text-sm uppercase tracking-[0.2em] mt-8 md:mt-10 transition-all shadow-[0_10px_30px_rgba(34,197,94,0.1)]"
                                 >

@@ -10,12 +10,7 @@ interface HeroSectionProps {
 
 const MAX_CHARS = 1800
 
-const AVATARS = [
-  'https://i.pravatar.cc/40?img=1',
-  'https://i.pravatar.cc/40?img=2',
-  'https://i.pravatar.cc/40?img=3',
-  'https://i.pravatar.cc/40?img=4',
-]
+
 
 export default function HeroSection({ onGenerate }: HeroSectionProps) {
   const [prompt, setPrompt] = useState('')
@@ -69,35 +64,7 @@ export default function HeroSection({ onGenerate }: HeroSectionProps) {
           </h1>
         </motion.div>
 
-        {/* Social proof strip */}
-        <motion.div
-          className="flex flex-col md:flex-row items-center justify-center gap-4 mb-10"
-          initial={{ opacity: 0, y: 16 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.7, delay: 0.15 }}
-        >
-          <div className="flex items-center gap-3">
-            {/* Avatar stack */}
-            <div className="flex -space-x-2">
-              {AVATARS.map((src, i) => (
-                <img
-                  key={i}
-                  src={src}
-                  alt="user avatar"
-                  className="w-8 h-8 rounded-full border-2 border-card object-cover"
-                />
-              ))}
-            </div>
-            <span className="text-sm font-semibold text-foreground">170+</span>
-          </div>
-
-          {/* Pill badge */}
-          <div className="flex flex-wrap items-center justify-center gap-1.5 border border-border bg-card/60 backdrop-blur-sm rounded-full px-4 py-2 text-xs sm:text-sm text-muted-foreground text-center">
-            <span className="text-accent font-semibold whitespace-nowrap">3.5 MILLION+</span>
-            <span className="hidden sm:inline">Sites have been built with our AI builder</span>
-            <span className="sm:hidden text-[11px]">Sites built with AI</span>
-          </div>
-        </motion.div>
+        <br />
 
         {/* CTA Input Card */}
         <motion.div

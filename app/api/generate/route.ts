@@ -3,6 +3,7 @@ import OpenAI from 'openai'
 import connectDB from '@/lib/mongodb'
 import User from '@/models/User'
 import { getAuthToken, verifyToken } from '@/lib/auth'
+import { isPromptOffensive } from '@/lib/moderation'
 
 // Basic in-memory rate limit: 5 requests per minute per user
 const rateLimitMap = new Map<string, { count: number; lastReset: number }>()
@@ -58,37 +59,36 @@ export async function POST(req: NextRequest) {
     }
 
     // 3. Plan Logic & Usage Limits
-    const now = new Date()
-    const lastReset = new Date(user.lastResetDate)
-
-    let shouldReset = false
-    if (user.plan === 'free') {
-      // Daily reset for Free plan
-      shouldReset = lastReset.toDateString() !== now.toDateString()
-    } else {
-      // Monthly reset for Pro/Pro Plus
-      shouldReset = lastReset.getMonth() !== now.getMonth() || lastReset.getFullYear() !== now.getFullYear()
+    if (user.plan === 'none') {
+      return NextResponse.json({
+        error: 'No active plan. Please subscribe to at least the Starter plan (₹1) to generate pages.',
+        showUpgrade: true
+      }, { status: 403 })
     }
 
-    if (shouldReset) {
-      user.generationsUsed = 0
-      user.lastResetDate = now
+    if (user.isSuspended) {
+      return NextResponse.json({
+        error: 'Your account has been suspended for violating our Terms of Service (repetitive abusive content).'
+      }, { status: 403 })
     }
 
-    // Define limits
-    const limits = {
-      free: { generations: 3, tokens: 1800 },
-      pro: { generations: 100, tokens: 2500 },
-      pro_plus: { generations: 300, tokens: 3500 },
+    // 4. Content Moderation (Local)
+    if (isPromptOffensive(prompt)) {
+      user.warnings = (user.warnings || 0) + 1
+      if (user.warnings >= 3) {
+        user.isSuspended = true
+      }
+      await user.save()
+
+      const remainingWarnings = 3 - user.warnings
+      const errorMsg = user.isSuspended
+        ? 'Prompt flagged for abusive/harmful content. Your account has been suspended after multiple violations.'
+        : `Warning: Your prompt was flagged for abusive/harmful content. You have ${remainingWarnings} warning(s) left before account suspension.`
+
+      return NextResponse.json({ error: errorMsg }, { status: 400 })
     }
 
-    const userLimit = limits[user.plan as keyof typeof limits] || limits.free
-
-    if (user.generationsUsed >= userLimit.generations) {
-      return NextResponse.json({ error: 'Monthly/Daily generation limit exceeded' }, { status: 403 })
-    }
-
-    // 4. OpenAI Call
+    // OpenAI Setup
     const apiKey = process.env.OPENAI_API_KEY
     if (!apiKey) {
       return NextResponse.json(
@@ -96,8 +96,55 @@ export async function POST(req: NextRequest) {
         { status: 500 }
       )
     }
-
     const client = new OpenAI({ apiKey })
+
+    const now = new Date()
+
+    // Monthly Reset Check
+    const lastMonthlyReset = new Date(user.lastResetDate)
+    const isNewMonth = lastMonthlyReset.getMonth() !== now.getMonth() || lastMonthlyReset.getFullYear() !== now.getFullYear()
+
+    if (isNewMonth) {
+      user.generationsUsed = 0
+      user.lastResetDate = now
+    }
+
+    // Daily Reset Check
+    const lastDailyReset = new Date(user.lastDailyResetDate || user.lastResetDate)
+    const isNewDay = lastDailyReset.toDateString() !== now.toDateString()
+
+    if (isNewDay) {
+      user.dailyGenerationsUsed = 0
+      user.lastDailyResetDate = now
+    }
+
+    // Define limits
+    const limits = {
+      none: { generations: 0, dailyLimit: 0, tokens: 0 },
+      free: { generations: 7, dailyLimit: 3, tokens: 1800 },
+      pro: { generations: 100, dailyLimit: 100, tokens: 2500 },
+      pro_plus: { generations: 300, dailyLimit: 300, tokens: 3500 },
+    }
+
+    const userPlanRaw = user.plan as keyof typeof limits
+    const userLimit = limits[userPlanRaw] || limits.none
+
+    // Check Monthly Limit
+    if (user.generationsUsed >= userLimit.generations) {
+      return NextResponse.json({
+        error: `Monthly generation limit exceeded (${userLimit.generations} generations total). Please upgrade your plan.`
+      }, { status: 403 })
+    }
+
+    // Check Daily Limit (Specifically for Free plan)
+    if (user.plan === 'free' && user.dailyGenerationsUsed >= userLimit.dailyLimit) {
+      return NextResponse.json({
+        error: `Daily generation limit exceeded (Max ${userLimit.dailyLimit} per day). Please come back tomorrow or upgrade!`
+      }, { status: 403 })
+    }
+
+    // 5. OpenAI Call
+    // const apiKey already defined above
 
     const systemPrompt = `You are an expert Next.js developer. Generate a landing page. Raw JSON only.
     Plan: ${user.plan}
@@ -120,6 +167,7 @@ export async function POST(req: NextRequest) {
 
     // 5. Update Usage
     user.generationsUsed += 1
+    user.dailyGenerationsUsed += 1
     await user.save()
 
     return NextResponse.json({
@@ -127,7 +175,9 @@ export async function POST(req: NextRequest) {
       usage: {
         used: user.generationsUsed,
         limit: userLimit.generations,
-        remaining: userLimit.generations - user.generationsUsed
+        remaining: userLimit.generations - user.generationsUsed,
+        dailyUsed: user.dailyGenerationsUsed,
+        dailyLimit: userLimit.dailyLimit
       }
     })
   } catch (error: any) {

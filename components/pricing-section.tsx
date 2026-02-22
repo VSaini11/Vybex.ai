@@ -7,15 +7,16 @@ import { Check } from 'lucide-react'
 const PLANS = [
   {
     id: 'free',
-    name: 'Free Plan – Starter',
+    name: 'Starter Plan',
     dot: '#00ff41',
-    monthlyPrice: 0,
-    yearlyPrice: 0,
-    yearlyTotal: 0,
+    monthlyPrice: 1,
+    yearlyPrice: 1,
+    yearlyTotal: 12,
     featured: false,
     note: '',
     features: [
-      '3 generations per day',
+      '7 generations per month',
+      'Max 3 generations per day',
       'Standard theme only',
       'Max 1,800 token output',
       'Watermark in footer',
@@ -147,7 +148,7 @@ export default function PricingSection() {
                   {/* Price */}
                   <div className="flex items-end gap-1 leading-none">
                     <span className="text-5xl font-extrabold text-foreground">
-                      {price === 0 ? (plan.comingSoon ? '—' : 'Free') : `₹ ${price.toLocaleString()}`}
+                      {price > 0 ? `₹ ${price.toLocaleString()}` : '—'}
                     </span>
                     {price > 0 && <span className="text-muted-foreground text-base mb-1">/mo</span>}
                   </div>
@@ -235,7 +236,7 @@ export default function PricingSection() {
                     </div>
                     <div className="flex items-end gap-1 leading-none">
                       <span className="text-5xl font-extrabold text-foreground">
-                        {price === 0 ? (plan.comingSoon ? '—' : 'Free') : `₹ ${price.toLocaleString()}`}
+                        {price > 0 ? `₹ ${price.toLocaleString()}` : '—'}
                       </span>
                       {price > 0 && <span className="text-muted-foreground text-base mb-1">/mo</span>}
                     </div>
@@ -269,7 +270,7 @@ export default function PricingSection() {
             className="px-8 py-3 rounded-full bg-accent text-background font-semibold text-base hover:bg-accent/90 transition-all duration-200 hover:scale-105"
             style={{ boxShadow: '0 0 30px rgba(0,255,65,0.25)' }}
           >
-            Get Started Free
+            Get Started
           </button>
         </motion.div>
 
