@@ -2,7 +2,8 @@
 
 import { motion } from 'framer-motion'
 import { useState, useRef } from 'react'
-import { ArrowUp } from 'lucide-react'
+import { ArrowUp, Mic } from 'lucide-react'
+import VyanaAssistant from './vyana-assistant'
 
 interface HeroSectionProps {
   onGenerate?: (prompt: string) => void
@@ -19,7 +20,7 @@ export default function HeroSection({ onGenerate }: HeroSectionProps) {
   const remaining = MAX_CHARS - prompt.length
 
   return (
-    <section className="relative min-h-screen flex items-center justify-center px-4 pt-28 pb-24 overflow-hidden">
+    <section className="relative min-h-screen flex items-center justify-center px-4 pt-12 pb-24 overflow-hidden">
       {/* Subtle background glows */}
       <div className="absolute inset-0 pointer-events-none overflow-hidden">
         <div className="absolute -top-40 left-1/4 w-[600px] h-[600px] bg-accent/5 rounded-full blur-[120px]" />
@@ -56,10 +57,10 @@ export default function HeroSection({ onGenerate }: HeroSectionProps) {
         >
           <h1 className="font-bold leading-[1.1] tracking-tight mb-6">
             <span className="block text-accent text-5xl md:text-7xl">
-              AI Landing Page Builder
+              Think it
             </span>
             <span className="block text-foreground text-4xl md:text-6xl mt-2">
-              Built for founders.
+              Vyana Builds it.
             </span>
           </h1>
         </motion.div>
@@ -103,14 +104,28 @@ export default function HeroSection({ onGenerate }: HeroSectionProps) {
                 <span className="text-xs text-muted-foreground tabular-nums">
                   {prompt.length}/{MAX_CHARS}
                 </span>
-                <button
-                  onClick={() => onGenerate?.(prompt)}
-                  className="flex items-center justify-center gap-2 px-6 py-2.5 rounded-xl bg-accent text-background font-semibold text-sm hover:bg-accent/90 transition-all duration-200 hover:scale-105 active:scale-95 shadow-lg flex-1 sm:flex-initial"
-                  style={{ boxShadow: '0 0 20px rgba(0,255,65,0.3)' }}
-                >
-                  Generate Now
-                  <ArrowUp className="w-4 h-4" />
-                </button>
+                <div className="flex items-center gap-3 flex-1 sm:flex-initial">
+                  <VyanaAssistant
+                    onTranscript={(text) => setPrompt(prev => prev + (prev ? ' ' : '') + text)}
+                    onGenerate={(text) => {
+                      setPrompt(prev => {
+                        const newPrompt = prev + (text ? (prev ? ' ' : '') + text : '')
+                        setTimeout(() => {
+                          onGenerate?.(newPrompt)
+                        }, 0)
+                        return newPrompt
+                      })
+                    }}
+                  />
+                  <button
+                    onClick={() => onGenerate?.(prompt)}
+                    className="flex items-center justify-center gap-2 px-6 py-2.5 rounded-xl bg-accent text-background font-semibold text-sm hover:bg-accent/90 transition-all duration-200 hover:scale-105 active:scale-95 shadow-lg flex-1 sm:flex-initial"
+                    style={{ boxShadow: '0 0 20px rgba(0,255,65,0.3)' }}
+                  >
+                    Generate Now
+                    <ArrowUp className="w-4 h-4" />
+                  </button>
+                </div>
               </div>
             </div>
           </div>
