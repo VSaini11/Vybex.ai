@@ -109,7 +109,6 @@ export default function HeroSection({ onGenerate }: HeroSectionProps) {
                     onTranscript={(text) => {
                       setPrompt(prev => {
                         const trimmedText = text.trim()
-                        if (prev.includes(trimmedText)) return prev
                         return (prev + (prev ? ' ' : '') + trimmedText).slice(0, MAX_CHARS)
                       })
                     }}

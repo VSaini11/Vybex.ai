@@ -15,6 +15,8 @@ export default function VyanaAssistant({ onTranscript, onGenerate }: VyanaAssist
     const recognitionRef = useRef<any>(null)
     const isActuallyListening = useRef(false)
     const isManualStopRef = useRef(false)
+    const isAutoRestarting = useRef(false)
+    const lastEmittedSegmentRef = useRef('')
     const processedTranscriptRef = useRef('')
     const voicesLoaded = useRef(false)
     const silenceTimeoutRef = useRef<NodeJS.Timeout | null>(null)
@@ -71,8 +73,15 @@ export default function VyanaAssistant({ onTranscript, onGenerate }: VyanaAssist
             recognitionInstance.onstart = () => {
                 isActuallyListening.current = true
                 isManualStopRef.current = false
-                processedTranscriptRef.current = ''
-                setIsListening(true)
+
+                // Only reset the visual state and transcript if it's a NEW session
+                if (!isAutoRestarting.current) {
+                    processedTranscriptRef.current = ''
+                    lastEmittedSegmentRef.current = ''
+                    setIsListening(true)
+                }
+
+                isAutoRestarting.current = false
                 resetSilenceTimer()
             }
 
@@ -92,9 +101,11 @@ export default function VyanaAssistant({ onTranscript, onGenerate }: VyanaAssist
 
                 if (transcript) {
                     const trimmedTranscript = transcript.trim()
-                    // Prevent duplicated chunks
-                    if (!processedTranscriptRef.current.includes(trimmedTranscript)) {
+                    // Prevention: Only skip if it's IDENTICAL to the last emitted chunk 
+                    // (prevents browser double-reporting on mobile)
+                    if (trimmedTranscript !== lastEmittedSegmentRef.current) {
                         onTranscriptRef.current(trimmedTranscript)
+                        lastEmittedSegmentRef.current = trimmedTranscript
                         processedTranscriptRef.current = (processedTranscriptRef.current + " " + trimmedTranscript).trim()
                     }
                 }
@@ -122,13 +133,14 @@ export default function VyanaAssistant({ onTranscript, onGenerate }: VyanaAssist
             }
 
             recognitionInstance.onend = () => {
-                // If it wasn't a manual stop and we haven't hit the silence timeout yet, 
-                // it's a mobile/browser dropout - restart it to keep listening.
+                // If it's NOT a manual stop and we still have a silence timer pending,
+                // the browser just "timed out" or dropped the connection. Restart it quietly.
                 if (!isManualStopRef.current && silenceTimeoutRef.current) {
-                    console.log('Voice dropout detected, auto-restarting...')
+                    console.log('Voice dropout detected, auto-restarting session...')
+                    isAutoRestarting.current = true
                     try {
                         recognitionInstance.start()
-                        return // Exit early as we've restarted
+                        return
                     } catch (e) {
                         console.error("Failed to auto-restart recognition:", e)
                     }
@@ -137,6 +149,7 @@ export default function VyanaAssistant({ onTranscript, onGenerate }: VyanaAssist
                 setIsListening(false)
                 isActuallyListening.current = false
                 isManualStopRef.current = false
+                isAutoRestarting.current = false
                 if (silenceTimeoutRef.current) {
                     clearTimeout(silenceTimeoutRef.current)
                     silenceTimeoutRef.current = null
