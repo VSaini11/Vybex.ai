@@ -106,7 +106,13 @@ export default function HeroSection({ onGenerate }: HeroSectionProps) {
                 </span>
                 <div className="flex items-center gap-3 flex-1 sm:flex-initial">
                   <VyanaAssistant
-                    onTranscript={(text) => setPrompt(prev => prev + (prev ? ' ' : '') + text)}
+                    onTranscript={(text) => {
+                      setPrompt(prev => {
+                        const trimmedText = text.trim()
+                        if (prev.includes(trimmedText)) return prev
+                        return (prev + (prev ? ' ' : '') + trimmedText).slice(0, MAX_CHARS)
+                      })
+                    }}
                     onGenerate={(text) => {
                       setPrompt(prev => {
                         const newPrompt = prev + (text ? (prev ? ' ' : '') + text : '')

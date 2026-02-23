@@ -62,8 +62,8 @@ export default function VyanaAssistant({ onTranscript, onGenerate }: VyanaAssist
         const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition
         if (SpeechRecognition) {
             const recognitionInstance = new SpeechRecognition()
-            recognitionInstance.continuous = true
-            recognitionInstance.interimResults = true
+            recognitionInstance.continuous = false
+            recognitionInstance.interimResults = false
             recognitionInstance.lang = 'en-US'
 
             recognitionInstance.onstart = () => {
@@ -75,25 +75,30 @@ export default function VyanaAssistant({ onTranscript, onGenerate }: VyanaAssist
             }
 
             recognitionInstance.onresult = (event: any) => {
-                resetSilenceTimer()
+                // Clear existing silence timer to prevent double triggers
+                if (silenceTimeoutRef.current) {
+                    clearTimeout(silenceTimeoutRef.current)
+                }
 
-                let newFinalTranscript = ''
+                let transcript = ""
 
-                // Iterate through the results from the resultIndex onwards
-                // Using resultIndex ensures we only process changed results
                 for (let i = event.resultIndex; i < event.results.length; i++) {
                     if (event.results[i].isFinal) {
-                        newFinalTranscript += event.results[i][0].transcript
+                        transcript += event.results[i][0].transcript
                     }
                 }
 
-                if (newFinalTranscript) {
-                    const trimmedChunk = newFinalTranscript.trim()
-                    if (trimmedChunk) {
-                        onTranscriptRef.current(trimmedChunk)
-                        processedTranscriptRef.current += (processedTranscriptRef.current ? ' ' : '') + trimmedChunk
+                if (transcript) {
+                    const trimmedTranscript = transcript.trim()
+                    // Prevent duplicated chunks
+                    if (!processedTranscriptRef.current.includes(trimmedTranscript)) {
+                        onTranscriptRef.current(trimmedTranscript)
+                        processedTranscriptRef.current = (processedTranscriptRef.current + " " + trimmedTranscript).trim()
                     }
                 }
+
+                // Reset silence timer
+                resetSilenceTimer()
 
                 // Keyword detection on the accumulated transcript
                 const lowerFull = processedTranscriptRef.current.toLowerCase()
