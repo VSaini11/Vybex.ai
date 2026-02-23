@@ -153,7 +153,7 @@ export default function BuilderLayout({
                                     exit={{ opacity: 0, y: -10 }}
                                     className="h-full w-full"
                                 >
-                                    <GenerationLog status={status} isLoading={isLoading} />
+                                    <GenerationLog status={status} isLoading={isLoading} error={error} />
                                 </motion.div>
                             ) : (
                                 <motion.div
