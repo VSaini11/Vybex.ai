@@ -77,26 +77,26 @@ export default function VyanaAssistant({ onTranscript, onGenerate }: VyanaAssist
             recognitionInstance.onresult = (event: any) => {
                 resetSilenceTimer()
 
-                let currentFullFinal = ''
-                for (let i = 0; i < event.results.length; ++i) {
+                let newFinalTranscript = ''
+
+                // Iterate through the results from the resultIndex onwards
+                // Using resultIndex ensures we only process changed results
+                for (let i = event.resultIndex; i < event.results.length; i++) {
                     if (event.results[i].isFinal) {
-                        currentFullFinal += event.results[i][0].transcript
+                        newFinalTranscript += event.results[i][0].transcript
                     }
                 }
 
-                currentFullFinal = currentFullFinal.trim()
-
-                // Check for new content compared to what we've previously "emitted"
-                if (currentFullFinal.length > processedTranscriptRef.current.length) {
-                    const newChunk = currentFullFinal.slice(processedTranscriptRef.current.length).trim()
-                    if (newChunk) {
-                        onTranscriptRef.current(newChunk)
-                        processedTranscriptRef.current = currentFullFinal
+                if (newFinalTranscript) {
+                    const trimmedChunk = newFinalTranscript.trim()
+                    if (trimmedChunk) {
+                        onTranscriptRef.current(trimmedChunk)
+                        processedTranscriptRef.current += (processedTranscriptRef.current ? ' ' : '') + trimmedChunk
                     }
                 }
 
                 // Keyword detection on the accumulated transcript
-                const lowerFull = currentFullFinal.toLowerCase()
+                const lowerFull = processedTranscriptRef.current.toLowerCase()
                 const triggers = ['generate', 'build it', 'create it']
                 if (triggers.some(t => lowerFull.includes(t))) {
                     const cleanPrompt = lowerFull.replace(/generate|build it|create it/gi, '').trim()
