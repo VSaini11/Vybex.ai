@@ -55,7 +55,7 @@ export default function VyanaAssistant({ onTranscript, onGenerate }: VyanaAssist
                     onGenerateRef.current('')
                 }, 1000)
             }
-        }, 5000) // Increased to 5 seconds for better UX
+        }, 7000) // Increased to 7 seconds for better UX
     }, [stopListening])
 
     useEffect(() => {
