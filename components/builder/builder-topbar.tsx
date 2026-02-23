@@ -1,7 +1,7 @@
 'use client'
 
 import { motion } from 'framer-motion'
-import { ArrowLeft, RefreshCw, Download, Loader2, Zap, Eye, Code2 } from 'lucide-react'
+import { X, Download, Loader2, Zap, Eye, Code2, Menu, ChevronDown, Share2, Globe, User } from 'lucide-react'
 
 interface BuilderTopBarProps {
     onBack: () => void
@@ -23,94 +23,80 @@ export default function BuilderTopBar({
     projectTitle = 'vybex-generated-app',
 }: BuilderTopBarProps) {
     return (
-        <div
-            className="flex items-center justify-between px-4 h-12 border-b border-border/60 flex-shrink-0"
-            style={{
-                background: 'rgba(10,10,10,0.9)',
-                backdropFilter: 'blur(20px)',
-                WebkitBackdropFilter: 'blur(20px)',
-            }}
-        >
-            {/* Left: Logo + project name */}
-            <div className="flex items-center gap-3 w-1/3">
-                <div className="flex items-center gap-2">
-                    <div
-                        className="w-6 h-6 rounded-md flex items-center justify-center"
-                        style={{ background: '#00ff41', boxShadow: '0 0 12px rgba(0,255,65,0.5)' }}
-                    >
-                        <Zap className="w-3.5 h-3.5 text-black" />
-                    </div>
-                    <span className="text-sm font-bold text-foreground tracking-tight">Vybex AI</span>
+        <div className="flex flex-col border-b border-border/60 flex-shrink-0 bg-[#0a0a0a]">
+            {/* Row 1: Navigation & Actions */}
+            <div className="flex items-center justify-between px-3 h-10 md:h-12 border-b border-white/5">
+                {/* Left: Menu + Breadcrumb-style Title */}
+                <div className="flex items-center gap-2 overflow-hidden">
+                    <button className="p-1 text-white/70 hover:text-white transition-colors">
+                        <Menu className="w-4 h-4" />
+                    </button>
+                    <span className="text-white/20 text-sm font-light hidden sm:inline">/</span>
+                    <button className="flex items-center gap-1 overflow-hidden">
+                        <span className="text-xs md:text-sm font-medium text-white/90 truncate max-w-[120px] md:max-w-none">
+                            {projectTitle}
+                        </span>
+                        <ChevronDown className="w-3 h-3 text-white/40" />
+                    </button>
+
+                    {/* Compact Loading Indicator */}
+                    {isLoading && (
+                        <div className="ml-2 flex items-center gap-1.5 text-[10px] text-accent font-medium">
+                            <Loader2 className="w-2.5 h-2.5 animate-spin" />
+                            <span className="hidden sm:inline">Generating…</span>
+                        </div>
+                    )}
                 </div>
-                <span className="text-border/60">|</span>
-                <span className="text-xs text-muted-foreground font-mono truncate max-w-[150px]">
-                    {projectTitle}
-                </span>
 
-                {/* Loading pill */}
-                {isLoading && (
-                    <motion.div
-                        initial={{ opacity: 0, scale: 0.9 }}
-                        animate={{ opacity: 1, scale: 1 }}
-                        className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-accent/10 border border-accent/20"
+                {/* Right: Utillity Icons (Download, Share, User/X) */}
+                <div className="flex items-center gap-2">
+                    <button
+                        onClick={onDownloadZip}
+                        className="flex items-center gap-1.5 px-3 py-1 rounded-md bg-white/5 border border-white/10 text-white/70 hover:text-white transition-all"
+                        title="Download ZIP"
                     >
-                        <Loader2 className="w-3 h-3 text-accent animate-spin" />
-                        <span className="text-xs text-accent font-medium">Generating…</span>
-                    </motion.div>
-                )}
+                        <Download className="w-3.5 h-3.5" />
+                        <span className="text-xs font-medium">Download</span>
+                    </button>
+
+                    <button className="p-1.5 text-white/50 hover:text-white transition-colors hidden sm:block">
+                        <Share2 className="w-4 h-4" />
+                    </button>
+
+                    <button
+                        onClick={onBack}
+                        className="p-1.5 text-white/70 hover:text-white transition-colors"
+                    >
+                        {/* Gradient Circle placeholder for User, using X for close action */}
+                        <div className="w-6 h-6 rounded-full bg-gradient-to-tr from-purple-500 to-blue-400 flex items-center justify-center p-1 font-bold">
+                            <X className="w-3.5 h-3.5 text-white" />
+                        </div>
+                    </button>
+                </div>
             </div>
 
-            {/* Center: View Toggles */}
-            <div className="flex items-center gap-1 bg-background/60 border border-border/60 rounded-xl p-1">
-                <button
-                    onClick={() => onViewModeChange('codebase')}
-                    className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all duration-200 ${viewMode === 'codebase'
-                        ? 'bg-accent text-black shadow-[0_0_15px_rgba(0,255,65,0.3)]'
-                        : 'text-muted-foreground hover:text-foreground hover:bg-white/5'
-                        }`}
-                >
-                    <Code2 className="w-3.5 h-3.5" />
-                    Codebase
-                </button>
-                <button
-                    onClick={() => onViewModeChange('preview')}
-                    className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all duration-200 ${viewMode === 'preview'
-                        ? 'bg-accent text-black shadow-[0_0_15px_rgba(0,255,65,0.3)]'
-                        : 'text-muted-foreground hover:text-foreground hover:bg-white/5'
-                        }`}
-                >
-                    <Eye className="w-3.5 h-3.5" />
-                    Preview
-                </button>
-            </div>
-
-            {/* Right: Action buttons */}
-            <div className="flex items-center justify-end gap-2 w-1/3">
-                <button
-                    onClick={onRegenerate}
-                    disabled={isLoading}
-                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold border border-border/60 text-muted-foreground hover:text-foreground hover:border-accent/40 hover:bg-accent/5 transition-all duration-150 disabled:opacity-40 disabled:cursor-not-allowed"
-                >
-                    <RefreshCw className={`w-3.5 h-3.5 ${isLoading ? 'animate-spin' : ''}`} />
-                    Regenerate
-                </button>
-
-                <button
-                    onClick={onDownloadZip}
-                    disabled={isLoading}
-                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold border border-border/60 text-muted-foreground hover:text-foreground hover:border-accent/40 hover:bg-accent/5 transition-all duration-150 disabled:opacity-40 disabled:cursor-not-allowed"
-                >
-                    <Download className="w-3.5 h-3.5" />
-                    Download ZIP
-                </button>
-
-                <button
-                    onClick={onBack}
-                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-card border border-border/60 text-foreground hover:border-accent/40 hover:bg-accent/5 transition-all duration-150"
-                >
-                    <ArrowLeft className="w-3.5 h-3.5" />
-                    Back
-                </button>
+            {/* Row 2: Segments (Matches the Image perfectly) */}
+            <div className="flex items-center justify-center py-2 px-3 md:py-3 border-b border-white/5 bg-[#0a0a0a]">
+                <div className="flex items-center bg-[#1a1a1a] rounded-lg p-0.5 border border-white/5 w-full md:w-auto md:min-w-[400px]">
+                    <button
+                        onClick={() => onViewModeChange('codebase')}
+                        className={`flex-1 flex items-center justify-center py-1.5 rounded-md text-[13px] font-medium transition-all duration-200 ${viewMode === 'codebase'
+                            ? 'bg-[#2a2a2a] text-white shadow-sm'
+                            : 'text-white/40 hover:text-white/60'
+                            }`}
+                    >
+                        Chat
+                    </button>
+                    <button
+                        onClick={() => onViewModeChange('preview')}
+                        className={`flex-1 flex items-center justify-center py-1.5 rounded-md text-[13px] font-medium transition-all duration-200 ${viewMode === 'preview'
+                            ? 'bg-[#2a2a2a] text-white shadow-sm'
+                            : 'text-white/40 hover:text-white/60'
+                            }`}
+                    >
+                        Preview
+                    </button>
+                </div>
             </div>
         </div>
     )

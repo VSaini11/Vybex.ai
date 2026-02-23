@@ -2,11 +2,20 @@
 
 import { motion, AnimatePresence } from 'framer-motion'
 import { useCallback, useMemo, useState } from 'react'
+import {
+    ChevronLeft,
+    ChevronRight,
+    Search,
+    Code2,
+    Eye,
+    Terminal
+} from "lucide-react"
 import FileExplorer from './file-explorer'
 import MonacoEditorPanel from './monaco-editor-panel'
 import PreviewPanel from './preview-panel'
 import BuilderTopBar from './builder-topbar'
 import type { GeneratedProject } from '@/lib/builder-types'
+import GenerationLog from './generation-log'
 import {
     ResizableHandle,
     ResizablePanel,
@@ -49,7 +58,9 @@ export default function BuilderLayout({
     onRegenerate,
     onDownloadZip,
 }: BuilderLayoutProps) {
-    const [viewMode, setViewMode] = useState<'codebase' | 'preview'>('preview')
+    const [viewMode, setViewMode] = useState<'chat' | 'preview'>('chat')
+    const [isSidebarOpen, setIsSidebarOpen] = useState(true)
+    const [previewLocalMode, setPreviewLocalMode] = useState<'preview' | 'code'>('preview')
 
     const activeContent = useMemo(() => {
         if (!project || !activeFilePath) return ''
@@ -81,118 +92,112 @@ export default function BuilderLayout({
                 onRegenerate={onRegenerate}
                 onDownloadZip={onDownloadZip}
                 isLoading={isLoading}
-                viewMode={viewMode}
-                onViewModeChange={setViewMode}
+                viewMode={viewMode === 'chat' ? 'codebase' : 'preview'}
+                onViewModeChange={(mode) => setViewMode(mode === 'codebase' ? 'chat' : 'preview')}
+                projectTitle={project?.files[0]?.name.split('.')[0] || 'vybex-app'}
             />
 
-            {/* Main panels */}
-            <div className="flex-1 p-2 overflow-hidden min-h-0">
-                <AnimatePresence mode="wait">
-                    <motion.div
-                        key={viewMode}
-                        initial={{ opacity: 0, scale: 0.98 }}
-                        animate={{ opacity: 1, scale: 1 }}
-                        exit={{ opacity: 0, scale: 1.02 }}
-                        transition={{ duration: 0.25, ease: "easeInOut" }}
-                        className="h-full w-full"
-                    >
-                        <ResizablePanelGroup direction="horizontal" className="gap-2">
+            {/* Main Content Area */}
+            <div className="flex-1 flex overflow-hidden min-h-0 bg-[#0a0a0a]">
+                {/* Collapsible Sidebar (File Explorer) */}
+                <motion.div
+                    initial={false}
+                    animate={{ width: isSidebarOpen ? 240 : 0, opacity: isSidebarOpen ? 1 : 0 }}
+                    transition={{ type: 'spring', stiffness: 300, damping: 30 }}
+                    className="border-r border-white/5 overflow-hidden flex flex-col relative"
+                >
+                    <div className="flex-1 min-w-[240px]">
+                        <FileExplorer
+                            files={project?.files ?? []}
+                            activeFilePath={activeFilePath}
+                            onSelectFile={onSelectFile}
+                        />
+                    </div>
+                </motion.div>
 
-                            {/* Dual Mode Switch */}
-                            {viewMode === 'codebase' ? (
-                                <>
-                                    {/* Codebase Mode: [Explorer | Editor] */}
-                                    <ResizablePanel defaultSize={20} minSize={15} maxSize={30}>
-                                        <div className={panelClass} style={panelGlow}>
-                                            <AnimatePresence mode="wait">
-                                                {isLoading ? (
-                                                    <motion.div
-                                                        key="loading"
-                                                        initial={{ opacity: 0 }}
-                                                        animate={{ opacity: 1 }}
-                                                        exit={{ opacity: 0 }}
-                                                        className="flex-1 flex flex-col p-4 gap-2"
-                                                    >
-                                                        <div className="h-3 bg-white/5 rounded animate-pulse mb-4 w-1/2" />
-                                                        {[...Array(8)].map((_, i) => (
-                                                            <div
-                                                                key={i}
-                                                                className="h-6 bg-white/5 rounded animate-pulse"
-                                                                style={{ width: `${55 + Math.random() * 35}%`, animationDelay: `${i * 80}ms` }}
-                                                            />
-                                                        ))}
-                                                    </motion.div>
-                                                ) : project ? (
-                                                    <motion.div
-                                                        key="explorer"
-                                                        initial={{ opacity: 0 }}
-                                                        animate={{ opacity: 1 }}
-                                                        className="flex-1 overflow-hidden"
-                                                    >
-                                                        <FileExplorer
-                                                            files={project.files}
-                                                            activeFilePath={activeFilePath}
-                                                            onSelectFile={onSelectFile}
-                                                        />
-                                                    </motion.div>
-                                                ) : null}
-                                            </AnimatePresence>
-                                        </div>
-                                    </ResizablePanel>
-                                    <ResizableHandle className="w-1 bg-transparent hover:bg-accent/10 transition-colors" />
-                                    <ResizablePanel defaultSize={80}>
-                                        <div className={panelClass} style={panelGlow}>
-                                            <EditorSection
-                                                isLoading={isLoading}
-                                                error={error}
-                                                project={project}
-                                                activeContent={activeContent}
-                                                activeLanguage={activeLanguage}
-                                                activeFilePath={activeFilePath}
-                                                openTabs={openTabs}
-                                                onTabClick={onTabClick}
-                                                onTabClose={onTabClose}
-                                                onBack={onBack}
-                                            />
-                                        </div>
-                                    </ResizablePanel>
-                                </>
+                {/* Main Viewport */}
+                <div className="flex-1 flex flex-col min-w-0 relative">
+                    {/* View Specific Header (The Eye/Code toggle for Preview) */}
+                    {viewMode === 'preview' && (
+                        <div className="flex items-center justify-between px-4 h-9 border-b border-white/5 bg-[#0d0d0d]">
+                            <div className="flex items-center gap-1 bg-white/5 rounded-md p-0.5 border border-white/10">
+                                <button
+                                    onClick={() => setPreviewLocalMode('preview')}
+                                    className={`p-1 rounded transition-all ${previewLocalMode === 'preview' ? 'bg-white/10 text-white' : 'text-white/40 hover:text-white/60'}`}
+                                >
+                                    <Eye className="w-3.5 h-3.5" />
+                                </button>
+                                <button
+                                    onClick={() => setPreviewLocalMode('code')}
+                                    className={`p-1 rounded transition-all ${previewLocalMode === 'code' ? 'bg-white/10 text-white' : 'text-white/40 hover:text-white/60'}`}
+                                >
+                                    <Code2 className="w-3.5 h-3.5" />
+                                </button>
+                            </div>
+                            <button className="text-white/30 hover:text-white/50 transition-colors">
+                                <div className="flex gap-0.5 px-2">
+                                    {[...Array(3)].map((_, i) => <div key={i} className="w-0.5 h-0.5 rounded-full bg-current" />)}
+                                </div>
+                            </button>
+                        </div>
+                    )}
+
+                    {/* Content Switcher */}
+                    <div className="flex-1 overflow-hidden relative">
+                        <AnimatePresence mode="wait">
+                            {viewMode === 'chat' ? (
+                                <motion.div
+                                    key="chat"
+                                    initial={{ opacity: 0, y: 10 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    exit={{ opacity: 0, y: -10 }}
+                                    className="h-full w-full"
+                                >
+                                    <GenerationLog status={status} isLoading={isLoading} />
+                                </motion.div>
                             ) : (
-                                <>
-                                    {/* Preview Mode: [Editor | Preview] */}
-                                    <ResizablePanel defaultSize={45} minSize={30}>
-                                        <div className={panelClass} style={panelGlow}>
-                                            <EditorSection
-                                                isLoading={isLoading}
-                                                error={error}
-                                                project={project}
-                                                activeContent={activeContent}
-                                                activeLanguage={activeLanguage}
-                                                activeFilePath={activeFilePath}
-                                                openTabs={openTabs}
-                                                onTabClick={onTabClick}
-                                                onTabClose={onTabClose}
-                                                onBack={onBack}
-                                            />
-                                        </div>
-                                    </ResizablePanel>
-                                    <ResizableHandle className="w-1 bg-transparent hover:bg-accent/10 transition-colors" />
-                                    <ResizablePanel defaultSize={55} minSize={30}>
-                                        <div className={panelClass} style={panelGlow}>
-                                            <PreviewSection
-                                                isLoading={isLoading}
-                                                error={error}
-                                                project={project}
-                                                status={status}
-                                                pageContent={pageContent}
-                                            />
-                                        </div>
-                                    </ResizablePanel>
-                                </>
+                                <motion.div
+                                    key="preview-container"
+                                    initial={{ opacity: 0, scale: 0.98 }}
+                                    animate={{ opacity: 1, scale: 1 }}
+                                    exit={{ opacity: 0, scale: 1.02 }}
+                                    className="h-full w-full"
+                                >
+                                    {previewLocalMode === 'preview' ? (
+                                        <PreviewSection
+                                            isLoading={isLoading}
+                                            error={error}
+                                            project={project}
+                                            status={status}
+                                            pageContent={pageContent}
+                                        />
+                                    ) : (
+                                        <EditorSection
+                                            isLoading={isLoading}
+                                            error={error}
+                                            project={project}
+                                            activeContent={activeContent}
+                                            activeLanguage={activeLanguage}
+                                            activeFilePath={activeFilePath}
+                                            openTabs={openTabs}
+                                            onTabClick={onTabClick}
+                                            onTabClose={onTabClose}
+                                            onBack={onBack}
+                                        />
+                                    )}
+                                </motion.div>
                             )}
-                        </ResizablePanelGroup>
-                    </motion.div>
-                </AnimatePresence>
+                        </AnimatePresence>
+                    </div>
+
+                    {/* Bottom Sidebar Toggle Arrow */}
+                    <button
+                        onClick={() => setIsSidebarOpen(!isSidebarOpen)}
+                        className="absolute bottom-4 left-4 z-20 w-8 h-8 rounded-full bg-[#1a1a1a] border border-white/10 flex items-center justify-center text-white/50 hover:text-white hover:bg-[#2a2a2a] transition-all shadow-xl"
+                    >
+                        {isSidebarOpen ? <ChevronLeft className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
+                    </button>
+                </div>
             </div>
         </motion.div>
     )

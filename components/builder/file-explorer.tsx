@@ -92,33 +92,41 @@ function FileNodeRow({
 
 export default function FileExplorer({ files, activeFilePath, onSelectFile }: FileExplorerProps) {
     return (
-        <div className="flex flex-col h-full overflow-hidden">
-            {/* Header */}
-            <div className="px-4 py-3 border-b border-border/60 flex-shrink-0">
-                <span className="text-xs font-semibold text-muted-foreground tracking-widest uppercase">
-                    Explorer
-                </span>
-            </div>
-
-            {/* Project root label */}
-            <div className="px-2 py-2 border-b border-border/40 flex-shrink-0">
-                <div className="flex items-center gap-1.5 px-2 py-1">
-                    <FolderOpen className="w-3.5 h-3.5 text-accent/60" />
-                    <span className="text-xs font-semibold text-foreground/70 truncate">vybex-generated-app</span>
+        <div className="flex h-full overflow-hidden bg-[#0d0d0d]">
+            {/* Sidebar Narrow Icons - as seen in the image */}
+            <div className="w-12 border-r border-white/5 flex flex-col items-center py-4 gap-4 flex-shrink-0">
+                <Files className="w-5 h-5 text-white/70" />
+                <ChevronRight className="w-5 h-5 text-white/30" />
+                <Files className="w-5 h-5 text-white/30" />
+                <div className="mt-auto">
+                    <ChevronDown className="w-5 h-5 text-white/30" />
                 </div>
             </div>
 
-            {/* Tree */}
-            <div className="flex-1 overflow-y-auto py-2 px-1 space-y-0.5 scrollbar-thin">
-                {files.map(node => (
-                    <FileNodeRow
-                        key={node.path}
-                        node={node}
-                        depth={0}
-                        activeFilePath={activeFilePath}
-                        onSelectFile={onSelectFile}
-                    />
-                ))}
+            {/* Tree Section */}
+            <div className="flex-1 flex flex-col min-w-0">
+                {/* Header */}
+                <div className="px-4 py-3 border-b border-white/5 flex items-center justify-between flex-shrink-0">
+                    <span className="text-[10px] font-bold text-white/40 uppercase tracking-widest">
+                        Explorer
+                    </span>
+                    <button className="text-white/40 hover:text-white/70 transition-colors">
+                        <ChevronDown className="w-3.5 h-3.5" />
+                    </button>
+                </div>
+
+                {/* Tree */}
+                <div className="flex-1 overflow-y-auto py-2 px-1 space-y-0.5 scrollbar-none">
+                    {files.map(node => (
+                        <FileNodeRow
+                            key={node.path}
+                            node={node}
+                            depth={0}
+                            activeFilePath={activeFilePath}
+                            onSelectFile={onSelectFile}
+                        />
+                    ))}
+                </div>
             </div>
         </div>
     )
