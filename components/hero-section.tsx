@@ -105,23 +105,25 @@ export default function HeroSection({ onGenerate }: HeroSectionProps) {
                   {prompt.length}/{MAX_CHARS}
                 </span>
                 <div className="flex items-center gap-3 flex-1 sm:flex-initial">
-                  <VyanaAssistant
-                    onTranscript={(text) => {
-                      setPrompt(prev => {
-                        const trimmedText = text.trim()
-                        return (prev + (prev ? ' ' : '') + trimmedText).slice(0, MAX_CHARS)
-                      })
-                    }}
-                    onGenerate={(text) => {
-                      setPrompt(prev => {
-                        const newPrompt = prev + (text ? (prev ? ' ' : '') + text : '')
-                        setTimeout(() => {
-                          onGenerate?.(newPrompt)
-                        }, 0)
-                        return newPrompt
-                      })
-                    }}
-                  />
+                  <div className="hidden md:block">
+                    <VyanaAssistant
+                      onTranscript={(text) => {
+                        setPrompt(prev => {
+                          const trimmedText = text.trim()
+                          return (prev + (prev ? ' ' : '') + trimmedText).slice(0, MAX_CHARS)
+                        })
+                      }}
+                      onGenerate={(text) => {
+                        setPrompt(prev => {
+                          const newPrompt = prev + (text ? (prev ? ' ' : '') + text : '')
+                          setTimeout(() => {
+                            onGenerate?.(newPrompt)
+                          }, 0)
+                          return newPrompt
+                        })
+                      }}
+                    />
+                  </div>
                   <button
                     onClick={() => onGenerate?.(prompt)}
                     className="flex items-center justify-center gap-2 px-6 py-2.5 rounded-xl bg-accent text-background font-semibold text-sm hover:bg-accent/90 transition-all duration-200 hover:scale-105 active:scale-95 shadow-lg flex-1 sm:flex-initial"
