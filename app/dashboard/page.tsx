@@ -188,7 +188,7 @@ export default function DashboardPage() {
                                         </div>
                                     </div>
                                     <div className="relative h-2 w-full bg-zinc-950 rounded-full overflow-hidden border border-white/5 mb-2">
-                                        <motion.div className="absolute top-0 left-0 h-full bg-gradient-to-r from-green-600 to-green-400" initial={{ width: 0 }} animate={{ width: `${usagePercent}%` }} transition={{ duration: 1.5, ease: 'expoOut' }} />
+                                        <motion.div className="absolute top-0 left-0 h-full bg-gradient-to-r from-green-600 to-green-400" initial={{ width: 0 }} animate={{ width: `${usagePercent}%` }} transition={{ duration: 1.5, ease: [0.16, 1, 0.3, 1] }} />
                                     </div>
                                     {(user.plan === 'free' || user.plan === 'none') && (
                                         <div className="flex items-center gap-2">
