@@ -58,9 +58,8 @@ export default function BuilderLayout({
     onRegenerate,
     onDownloadZip,
 }: BuilderLayoutProps) {
-    const [viewMode, setViewMode] = useState<'chat' | 'preview'>('chat')
+    const [viewMode, setViewMode] = useState<'chat' | 'preview' | 'code'>('chat')
     const [isSidebarOpen, setIsSidebarOpen] = useState(true)
-    const [previewLocalMode, setPreviewLocalMode] = useState<'preview' | 'code'>('preview')
 
     const activeContent = useMemo(() => {
         if (!project || !activeFilePath) return ''
@@ -74,7 +73,8 @@ export default function BuilderLayout({
 
     const pageContent = useMemo(() => {
         if (!project) return undefined
-        return project.fileMap['app/page.tsx']?.content
+        // Check for common entry point paths
+        return project.fileMap['app/page.tsx']?.content || project.fileMap['page.tsx']?.content
     }, [project])
 
     return (
@@ -92,8 +92,8 @@ export default function BuilderLayout({
                 onRegenerate={onRegenerate}
                 onDownloadZip={onDownloadZip}
                 isLoading={isLoading}
-                viewMode={viewMode === 'chat' ? 'codebase' : 'preview'}
-                onViewModeChange={(mode) => setViewMode(mode === 'codebase' ? 'chat' : 'preview')}
+                viewMode={viewMode}
+                onViewModeChange={setViewMode}
                 projectTitle={project?.files[0]?.name.split('.')[0] || 'vybex-app'}
             />
 
@@ -117,31 +117,6 @@ export default function BuilderLayout({
 
                 {/* Main Viewport */}
                 <div className="flex-1 flex flex-col min-w-0 relative">
-                    {/* View Specific Header (The Eye/Code toggle for Preview) */}
-                    {viewMode === 'preview' && (
-                        <div className="flex items-center justify-between px-4 h-9 border-b border-white/5 bg-[#0d0d0d]">
-                            <div className="flex items-center gap-1 bg-white/5 rounded-md p-0.5 border border-white/10">
-                                <button
-                                    onClick={() => setPreviewLocalMode('preview')}
-                                    className={`p-1 rounded transition-all ${previewLocalMode === 'preview' ? 'bg-white/10 text-white' : 'text-white/40 hover:text-white/60'}`}
-                                >
-                                    <Eye className="w-3.5 h-3.5" />
-                                </button>
-                                <button
-                                    onClick={() => setPreviewLocalMode('code')}
-                                    className={`p-1 rounded transition-all ${previewLocalMode === 'code' ? 'bg-white/10 text-white' : 'text-white/40 hover:text-white/60'}`}
-                                >
-                                    <Code2 className="w-3.5 h-3.5" />
-                                </button>
-                            </div>
-                            <button className="text-white/30 hover:text-white/50 transition-colors">
-                                <div className="flex gap-0.5 px-2">
-                                    {[...Array(3)].map((_, i) => <div key={i} className="w-0.5 h-0.5 rounded-full bg-current" />)}
-                                </div>
-                            </button>
-                        </div>
-                    )}
-
                     {/* Content Switcher */}
                     <div className="flex-1 overflow-hidden relative">
                         <AnimatePresence mode="wait">
@@ -157,13 +132,13 @@ export default function BuilderLayout({
                                 </motion.div>
                             ) : (
                                 <motion.div
-                                    key="preview-container"
+                                    key="content-container"
                                     initial={{ opacity: 0, scale: 0.98 }}
                                     animate={{ opacity: 1, scale: 1 }}
                                     exit={{ opacity: 0, scale: 1.02 }}
                                     className="h-full w-full"
                                 >
-                                    {previewLocalMode === 'preview' ? (
+                                    {viewMode === 'preview' ? (
                                         <PreviewSection
                                             isLoading={isLoading}
                                             error={error}
@@ -202,7 +177,6 @@ export default function BuilderLayout({
         </motion.div>
     )
 }
-
 // Sub-components for better organization
 function EditorSection({ isLoading, error, project, activeContent, activeLanguage, activeFilePath, openTabs, onTabClick, onTabClose, onBack }: any) {
     return (

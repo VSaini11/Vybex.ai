@@ -64,6 +64,7 @@ NON-NEGOTIABLE UI RULES:
 - GLASSMORPHISM: Use Tailwind classes like "bg-white/10 backdrop-blur-md border border-white/20". Do NOT use custom component names for this.
 - COLORS: Strictly use the Background and Accent colors provided in the User Message.
 - NO PLACEHOLDERS: Code must be 100% complete. No "Add content here" or "TODO".
+- JSX SAFETY: Never use literal "<" or ">" symbols inside text content (e.g., in math expressions like "P < 0.01"). USE HTML ENTITIES like "&lt;" or "&gt;" instead to prevent parsing errors.
 
 CODE QUALITY RULES:
 - Output ONLY raw TypeScript/React code. Zero markdown, zero explanation, zero code fences (\`\`\`).
@@ -149,11 +150,16 @@ async function generatePage(userMessage: string, maxTokens: number): Promise<str
 // Build Project Structure
 // ─────────────────────────────────────────
 function buildProject(pageTsx: string) {
-  const layoutTsx = `import './globals.css'
+  const layoutTsx = `'use client'
+import './globals.css'
+import { Inter } from 'next/font/google'
+
+const inter = Inter({ subsets: ['latin'] })
+
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en">
-      <body>{children}</body>
+    <html lang="en" className="scroll-smooth">
+      <body className={inter.className}>{children}</body>
     </html>
   )
 }`
@@ -161,23 +167,95 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   const globalsCss = `@tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+:root {
+  --background: 0 0% 100%;
+  --foreground: 240 10% 3.9%;
+  --primary: 240 5.9% 10%;
+  --primary-foreground: 0 0% 98%;
+  --accent: 240 4.8% 95.9%;
+  --accent-foreground: 240 5.9% 10%;
+}
+
+.dark {
+  --background: 240 10% 3.9%;
+  --foreground: 0 0% 98%;
+  --primary: 0 0% 98%;
+  --primary-foreground: 240 5.9% 10%;
+  --accent: 240 3.7% 15.9%;
+  --accent-foreground: 0 0% 98%;
+}
+
 * { box-sizing: border-box; }
-body { -webkit-font-smoothing: antialiased; }
+body { 
+  -webkit-font-smoothing: antialiased;
+  background-color: hsl(var(--background));
+  color: hsl(var(--foreground));
+}
 html { scroll-behavior: smooth; }`
 
   const tailwindConfig = `import type { Config } from 'tailwindcss'
+
 const config: Config = {
-  content: ['./app/**/*.{ts,tsx}'],
-  theme: { extend: {} },
+  content: [
+    './app/**/*.{js,ts,jsx,tsx,mdx}',
+    './components/**/*.{js,ts,jsx,tsx,mdx}',
+  ],
+  theme: {
+    extend: {
+      colors: {
+        background: "hsl(var(--background))",
+        foreground: "hsl(var(--foreground))",
+        primary: {
+          DEFAULT: "hsl(var(--primary))",
+          foreground: "hsl(var(--primary-foreground))",
+        },
+        accent: {
+          DEFAULT: "hsl(var(--accent))",
+          foreground: "hsl(var(--accent-foreground))",
+        },
+      },
+    },
+  },
   plugins: [],
 }
 export default config`
 
+  const postcssConfig = `module.exports = {
+  plugins: {
+    tailwindcss: {},
+    autoprefixer: {},
+  },
+}`
+
   const packageJson = JSON.stringify({
-    name: 'vybex-generated-app', version: '0.1.0', private: true,
-    scripts: { dev: 'next dev', build: 'next build', start: 'next start' },
-    dependencies: { 'framer-motion': '^11.0.0', 'lucide-react': '^0.400.0', 'next': '14.2.0', 'react': '^18', 'react-dom': '^18' },
-    devDependencies: { '@types/node': '^20', '@types/react': '^18', '@types/react-dom': '^18', 'autoprefixer': '^10.0.1', 'postcss': '^8', 'tailwindcss': '^3.4.1', 'typescript': '^5' },
+    name: 'vybex-generated-app',
+    version: '0.1.0',
+    private: true,
+    scripts: {
+      dev: 'next dev',
+      build: 'next build',
+      start: 'next start',
+      lint: 'next lint'
+    },
+    dependencies: {
+      'framer-motion': '^11.0.0',
+      'lucide-react': '^0.400.0',
+      'next': '14.2.0',
+      'react': '^18',
+      'react-dom': '^18',
+      'clsx': '^2.1.0',
+      'tailwind-merge': '^2.2.0'
+    },
+    devDependencies: {
+      '@types/node': '^20',
+      '@types/react': '^18',
+      '@types/react-dom': '^18',
+      'autoprefixer': '^10.0.1',
+      'postcss': '^8',
+      'tailwindcss': '^3.4.1',
+      'typescript': '^5'
+    },
   }, null, 2)
 
   return {
@@ -186,6 +264,7 @@ export default config`
       { name: 'layout.tsx', path: 'app/layout.tsx', type: 'file' as const, language: 'typescript' },
       { name: 'globals.css', path: 'app/globals.css', type: 'file' as const, language: 'css' },
       { name: 'tailwind.config.ts', path: 'tailwind.config.ts', type: 'file' as const, language: 'typescript' },
+      { name: 'postcss.config.js', path: 'postcss.config.js', type: 'file' as const, language: 'javascript' },
       { name: 'package.json', path: 'package.json', type: 'file' as const, language: 'json' },
     ],
     fileMap: {
@@ -193,6 +272,7 @@ export default config`
       'app/layout.tsx': { content: layoutTsx, language: 'typescript' },
       'app/globals.css': { content: globalsCss, language: 'css' },
       'tailwind.config.ts': { content: tailwindConfig, language: 'typescript' },
+      'postcss.config.js': { content: postcssConfig, language: 'javascript' },
       'package.json': { content: packageJson, language: 'json' },
     },
   }

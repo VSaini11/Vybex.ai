@@ -8,8 +8,8 @@ interface BuilderTopBarProps {
     onRegenerate: () => void
     onDownloadZip: () => void
     isLoading: boolean
-    viewMode: 'codebase' | 'preview'
-    onViewModeChange: (mode: 'codebase' | 'preview') => void
+    viewMode: 'chat' | 'preview' | 'code'
+    onViewModeChange: (mode: 'chat' | 'preview' | 'code') => void
     projectTitle?: string
 }
 
@@ -52,11 +52,11 @@ export default function BuilderTopBar({
                 <div className="flex items-center gap-2">
                     <button
                         onClick={onDownloadZip}
-                        className="flex items-center gap-1.5 px-3 py-1 rounded-md bg-white/5 border border-white/10 text-white/70 hover:text-white transition-all"
+                        className="flex items-center gap-1.5 px-3 py-1 rounded-md bg-white/5 border border-white/10 text-white/70 hover:text-white transition-all shadow-sm"
                         title="Download ZIP"
                     >
                         <Download className="w-3.5 h-3.5" />
-                        <span className="text-xs font-medium">Download</span>
+                        <span className="text-xs font-semibold tracking-wide">Download</span>
                     </button>
 
                     <button className="p-1.5 text-white/50 hover:text-white transition-colors hidden sm:block">
@@ -67,7 +67,6 @@ export default function BuilderTopBar({
                         onClick={onBack}
                         className="p-1.5 text-white/70 hover:text-white transition-colors"
                     >
-                        {/* Gradient Circle placeholder for User, using X for close action */}
                         <div className="w-6 h-6 rounded-full bg-gradient-to-tr from-purple-500 to-blue-400 flex items-center justify-center p-1 font-bold">
                             <X className="w-3.5 h-3.5 text-white" />
                         </div>
@@ -75,26 +74,38 @@ export default function BuilderTopBar({
                 </div>
             </div>
 
-            {/* Row 2: Segments (Matches the Image perfectly) */}
+            {/* Row 2: Segments (Chat, Preview, Code) */}
             <div className="flex items-center justify-center py-2 px-3 md:py-3 border-b border-white/5 bg-[#0a0a0a]">
-                <div className="flex items-center bg-[#1a1a1a] rounded-lg p-0.5 border border-white/5 w-full md:w-auto md:min-w-[400px]">
+                <div className="flex items-center bg-[#1a1a1a] rounded-lg p-1 border border-white/5 w-full md:w-auto md:min-w-[450px] gap-1">
                     <button
-                        onClick={() => onViewModeChange('codebase')}
-                        className={`flex-1 flex items-center justify-center py-1.5 rounded-md text-[13px] font-medium transition-all duration-200 ${viewMode === 'codebase'
+                        onClick={() => onViewModeChange('chat')}
+                        className={`flex-1 flex items-center gap-2 justify-center py-1.5 rounded-md text-[13px] font-bold transition-all duration-200 ${viewMode === 'chat'
                             ? 'bg-[#2a2a2a] text-white shadow-sm'
-                            : 'text-white/40 hover:text-white/60'
+                            : 'text-white/30 hover:text-white/50 hover:bg-white/[0.02]'
                             }`}
                     >
+                        <Zap className={`w-3.5 h-3.5 ${viewMode === 'chat' ? 'text-[#00ff41]' : ''}`} />
                         Chat
                     </button>
                     <button
                         onClick={() => onViewModeChange('preview')}
-                        className={`flex-1 flex items-center justify-center py-1.5 rounded-md text-[13px] font-medium transition-all duration-200 ${viewMode === 'preview'
+                        className={`flex-1 flex items-center gap-2 justify-center py-1.5 rounded-md text-[13px] font-bold transition-all duration-200 ${viewMode === 'preview'
                             ? 'bg-[#2a2a2a] text-white shadow-sm'
-                            : 'text-white/40 hover:text-white/60'
+                            : 'text-white/30 hover:text-white/50 hover:bg-white/[0.02]'
                             }`}
                     >
+                        <Eye className={`w-3.5 h-3.5 ${viewMode === 'preview' ? 'text-[#00ff41]' : ''}`} />
                         Preview
+                    </button>
+                    <button
+                        onClick={() => onViewModeChange('code')}
+                        className={`flex-1 flex items-center gap-2 justify-center py-1.5 rounded-md text-[13px] font-bold transition-all duration-200 ${viewMode === 'code'
+                            ? 'bg-[#2a2a2a] text-white shadow-sm'
+                            : 'text-white/30 hover:text-white/50 hover:bg-white/[0.02]'
+                            }`}
+                    >
+                        <Code2 className={`w-3.5 h-3.5 ${viewMode === 'code' ? 'text-[#00ff41]' : ''}`} />
+                        Code
                     </button>
                 </div>
             </div>

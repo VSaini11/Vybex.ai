@@ -8,7 +8,6 @@ interface PreviewPanelProps {
 }
 
 function buildPreviewHtml(pageContent: string): string {
-  // Use JSON stringify to safely escape the code for a data attribute
   const safeJson = JSON.stringify(pageContent);
 
   return `<!DOCTYPE html>
@@ -17,86 +16,162 @@ function buildPreviewHtml(pageContent: string): string {
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Preview – Vybex AI</title>
+  
   <script src="https://cdn.tailwindcss.com"></script>
-  <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
-  <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
   <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-  <script src="https://unpkg.com/framer-motion@11/dist/framer-motion.js"></script>
-  <script src="https://unpkg.com/lucide-react@latest/dist/umd/lucide-react.js"></script>
+
+  <script>
+    window.tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            background: "hsl(var(--background))",
+            foreground: "hsl(var(--foreground))",
+            primary: { DEFAULT: "hsl(var(--primary))", foreground: "hsl(var(--primary-foreground))" },
+            accent: { DEFAULT: "hsl(var(--accent))", foreground: "hsl(var(--accent-foreground))" },
+          }
+        }
+      }
+    }
+  </script>
+
   <style>
+    :root {
+      --background: 240 10% 3.9%; --foreground: 0 0% 98%;
+      --primary: 0 0% 98%; --primary-foreground: 240 5.9% 10%;
+      --accent: 240 3.7% 15.9%; --accent-foreground: 0 0% 98%;
+    }
     * { box-sizing: border-box; margin: 0; padding: 0; }
-    body { -webkit-font-smoothing: antialiased; background: #0a0a0a; color: white; }
-    #root { min-height: 100vh; }
+    body { 
+      -webkit-font-smoothing: antialiased; 
+      background-color: #0c0c0c; 
+      color: white; 
+      overflow-x: hidden; 
+    }
+    #root { min-height: 100vh; background: #0c0c0c; }
+    #error-display { 
+      padding: 1rem 2rem; 
+      background: #1a0000; 
+      color: #ff4444; 
+      font-family: monospace; 
+      white-space: pre-wrap; 
+      font-size: 13px; 
+      border-bottom: 2px solid #400;
+      display: none;
+      position: sticky;
+      top: 0;
+      z-index: 9999;
+    }
   </style>
 </head>
 <body>
+  <div id="error-display"></div>
   <div id="root"></div>
-  <div id="error-display" style="display:none;padding:2rem;background:#1a0000;color:#ff4444;font-family:monospace;white-space:pre-wrap;font-size:13px;border-bottom:1px solid #400;"></div>
   
-  <script id="page-source" type="application/json">
-    ${safeJson}
-  </script>
+  <script id="page-source" type="application/json">${safeJson}</script>
 
-  <script type="text/babel" data-presets="typescript,react">
-    (function() {
+  <script>
+    (async function() {
+      const el = document.getElementById('error-display');
+      const showError = (msg) => { 
+        if (msg.includes('forwardRef')) return; // Suppress Lucide initialization warning
+        el.style.display = 'block'; 
+        el.textContent = 'Preview Error: ' + msg; 
+      };
+      
+      window.onerror = (msg, url, line) => { showError(msg + " (Line " + line + ")"); };
+
+      function loadScript(src) {
+        return new Promise((resolve, reject) => {
+          const s = document.createElement('script');
+          s.src = src; s.crossOrigin = "anonymous";
+          s.onload = resolve; s.onerror = reject;
+          document.head.appendChild(s);
+        });
+      }
+
       try {
-        const rawSource = JSON.parse(document.getElementById('page-source').textContent);
+        await loadScript("https://unpkg.com/react@18/umd/react.development.js");
+        await loadScript("https://unpkg.com/react-dom@18/umd/react-dom.development.js");
         
-        // 1. Capture the default export name before stripping
-        const defaultExportRegex = /export\\s+default\\s+(?:(?:function|class|const)\\s+)?(\\w+)?/;
-        const defaultExportMatch = rawSource.match(defaultExportRegex);
-        const capturedName = defaultExportMatch ? defaultExportMatch[1] : null;
+        // Brief pause to ensure React is fully settled globally before Lucide
+        await new Promise(r => setTimeout(r, 50));
+        
+        await Promise.all([
+          loadScript("https://unpkg.com/framer-motion@11/dist/framer-motion.js"),
+          loadScript("https://unpkg.com/lucide-react@latest/dist/umd/lucide-react.js")
+        ]);
 
-        // 2. Strip imports and directives
+        const rawSource = JSON.parse(document.getElementById('page-source').textContent);
+        const Lucide = (window.LucideReact || window.Lucide || {});
+        const Motion = (window.FramerMotion || window.Motion || {});
+        const IconProxy = new Proxy(Lucide, {
+          get: (target, prop) => target[prop] || (target.icons && target.icons[prop]) || (() => null)
+        });
+
+        // 1. Build mappings
+        const importRegex = /import\\s+{[^}]+}\\s+from\\s+['"](lucide-react|framer-motion|react)['"]/g;
+        let mappings = '';
+        let match;
+        while ((match = importRegex.exec(rawSource)) !== null) {
+          const content = match[0];
+          const library = match[1];
+          const membersMatch = content.match(/{([^}]+)}/);
+          if (membersMatch) {
+            const members = membersMatch[1].split(',').map(m => m.trim());
+            const libObj = library === 'lucide-react' ? 'IconProxy' : (library === 'framer-motion' ? 'Motion' : 'React');
+            mappings += \`var { \${members.join(', ')} } = \${libObj};\\n\`;
+          }
+        }
+
+        const componentName = (rawSource.match(/export\\s+default\\s+(?:(?:function|class|const)\\s+)?(\\w+)?/) || [])[1];
+
+        // 2. Transform page code (Clean imports + Fix Next.js style tags + Escape math symbols)
         const moduleCode = rawSource
           .replace(/^(?:\\s*['"]?use client['"]?;?\\s*)+/gi, '')
           .replace(/^\\s*import\\b[\\s\\S]*?from\\s+['"].*?['"];?/gm, '')
           .replace(/^\\s*import\\s+['"].*?['"];?/gm, '')
           .replace(/export\\s+default\\s+/g, '/* export default */ ')
-          .replace(/export\\s+(?!default)/g, '/* export */ ');
+          .replace(/export\\s+(?!default)/g, '/* export */ ')
+          .replace(/<style\\s+jsx[^>]*>([\\s\\S]*?)<\\/style>/gi, '<style>$1</style>') // Fix <style jsx> warnings
+          .replace(/via\\.placeholder\\.com/g, 'placehold.co') // Fix broken placeholder service
+          // ESCAPE LITERAL "<" THAT BREAK JSX:
+          // Match "<" that is NOT followed by a letter (start of tag) or "/" (end of tag)
+          .replace(/<(?![a-zA-Z\\/])/g, '&lt;') 
+          // Match "..." that might be malformed in tags
+          .replace(/\\{\\s*\\.\\.\\.\\s*\\}/g, ''); 
 
         const wrappedCode = \`
-          const { useState, useEffect, useRef, useCallback, useMemo } = React;
-          const { motion, AnimatePresence, useScroll, useTransform, useInView } = (window.FramerMotion || {});
-          
-          const LucideIcons = (window.LucideReact || {});
-          Object.keys(LucideIcons).forEach(key => {
-            if (typeof LucideIcons[key] === 'function' || typeof LucideIcons[key] === 'object') {
-              window[key] = LucideIcons[key];
+          (function() {
+            try {
+              \${mappings}
+              var { useState, useEffect, useRef, useMemo, useCallback, useLayoutEffect } = React;
+              
+              \${moduleCode}
+              
+              let __Found = typeof \${componentName || 'null'} === 'function' ? \${componentName} : null;
+              if (!__Found && window["\${componentName}"]) __Found = window["\${componentName}"];
+              if (!__Found) {
+                const candidates = Object.keys(window).filter(k => /^[A-Z]/.test(k) && typeof window[k] === 'function' && !['React', 'ReactDOM', 'LucideReact', 'Motion', 'IconProxy'].includes(k));
+                __Found = window[candidates[0]] || window.Page || window.Home || window.App;
+              }
+
+              if (__Found) {
+                ReactDOM.createRoot(document.getElementById('root')).render(React.createElement(__Found));
+              }
+            } catch (err) {
+               console.error('Render Error:', err);
+               throw err;
             }
-          });
-
-          \${moduleCode}
-
-          const __captured = \${capturedName ? '"' + capturedName + '"' : 'null'};
-          const __found = (typeof window[__captured] !== 'undefined' ? window[__captured] : null) 
-            || (typeof Page !== 'undefined' ? Page : null)
-            || (typeof Home !== 'undefined' ? Home : null)
-            || (typeof LandingPage !== 'undefined' ? LandingPage : null)
-            || (typeof App !== 'undefined' ? App : null)
-            || (function() {
-                 const candidates = Object.keys(window).filter(k => /^[A-Z]/.test(k) && typeof window[k] === 'function');
-                 return window[candidates[0]] || null;
-               })();
-
-          if (__found) {
-            ReactDOM.createRoot(document.getElementById('root')).render(React.createElement(__found));
-          } else {
-            throw new Error('No component found to render. Ensure you have an "export default" or a "Page" component.');
-          }
+          })();
         \`;
 
-        const transformed = Babel.transform(wrappedCode, { 
-          presets: ['typescript', 'react'],
-          filename: 'page.tsx' 
-        }).code;
-        
+        const transformed = Babel.transform(wrappedCode, { presets: ['typescript', 'react'], filename: 'page.tsx' }).code;
         eval(transformed);
-
       } catch (e) {
-        const el = document.getElementById('error-display');
-        el.style.display = 'block';
-        el.textContent = 'Preview Error: ' + e.message;
+        showError(e.message);
+        console.error('Core Error:', e);
       }
     })();
   </script>
@@ -105,7 +180,6 @@ function buildPreviewHtml(pageContent: string): string {
 }
 
 export default function PreviewPanel({ pageContent }: PreviewPanelProps) {
-  const [mode, setMode] = useState<'preview' | 'code'>('preview')
   const [refreshKey, setRefreshKey] = useState(0)
 
   const iframeSrcdoc = useMemo(() => {
@@ -117,56 +191,27 @@ export default function PreviewPanel({ pageContent }: PreviewPanelProps) {
   }, [pageContent, refreshKey])
 
   return (
-    <div className="flex flex-col h-full overflow-hidden">
-      <div className="flex items-center gap-1 px-4 py-3 border-b border-border/60 flex-shrink-0">
-        <div className="flex items-center gap-1 bg-background/60 border border-border/60 rounded-xl p-1">
-          <button
-            onClick={() => setMode('preview')}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all duration-150 \${mode === 'preview'
-              ? 'bg-accent text-black shadow-sm'
-              : 'text-muted-foreground hover:text-foreground'
-              }`}
-          >
-            <Eye className="w-3.5 h-3.5" />
-            Preview
-          </button>
-          <button
-            onClick={() => setMode('code')}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all duration-150 \${mode === 'code'
-              ? 'bg-accent text-black shadow-sm'
-              : 'text-muted-foreground hover:text-foreground'
-              }`}
-          >
-            <Code2 className="w-3.5 h-3.5" />
-            Code
-          </button>
-        </div>
-        <div className="ml-auto">
-          <button
-            onClick={() => setRefreshKey(k => k + 1)}
-            className="p-1.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-white/5 transition-all duration-150"
-            title="Refresh preview"
-          >
-            <RefreshCw className="w-3.5 h-3.5" />
-          </button>
-        </div>
+    <div className="flex flex-col h-full overflow-hidden bg-[#0a0a0a] relative">
+      {/* Refresh overlay button */}
+      <div className="absolute top-4 right-4 z-10">
+        <button
+          onClick={() => setRefreshKey(k => k + 1)}
+          className="p-2 rounded-xl bg-white/5 border border-white/10 text-white/40 hover:text-white hover:bg-white/10 transition-all duration-200 backdrop-blur-md shadow-xl"
+          title="Refresh preview"
+        >
+          <RefreshCw className="w-4 h-4" />
+        </button>
       </div>
 
       <div className="flex-1 overflow-hidden relative">
-        {mode === 'preview' ? (
-          <iframe
-            key={refreshKey}
-            id="preview-iframe"
-            srcDoc={iframeSrcdoc}
-            sandbox="allow-scripts allow-same-origin"
-            className="w-full h-full border-0 bg-[#0a0a0a]"
-            title="Live Preview"
-          />
-        ) : (
-          <pre className="w-full h-full overflow-auto p-4 text-xs font-mono text-green-400/80 bg-[#0d0d0d] leading-relaxed whitespace-pre-wrap break-words">
-            {pageContent ?? '// No file selected'}
-          </pre>
-        )}
+        <iframe
+          key={refreshKey}
+          id="preview-iframe"
+          srcDoc={iframeSrcdoc}
+          sandbox="allow-scripts allow-same-origin"
+          className="w-full h-full border-0 bg-transparent"
+          title="Live Preview"
+        />
       </div>
     </div>
   )
