@@ -11,7 +11,20 @@ export const metadata: Metadata = {
   metadataBase: new URL('https://vybexai.vercel.app/'),
   title: 'Vybex.ai - Build Your Landing Page in 5 Minutes',
   description: 'AI-powered landing page generator that builds conversion-ready Next.js + Tailwind landing pages in minutes. Transform your ideas into live websites instantly.',
-  keywords: ['AI landing page generator', 'Vybex AI', 'automated website builder', 'Next.js landing page', 'Tailwind CSS builder', 'AI SaaS builder', 'Vyana builder'],
+  keywords: [
+    'Vybex.ai',
+    'Vybex AI',
+    'Vyana AI',
+    'Vyana AI Builder',
+    'Vyana 2.0 Architect',
+    'AI landing page generator',
+    'automated website builder',
+    'Next.js landing page',
+    'Tailwind CSS builder',
+    'AI SaaS builder',
+    'AI workflow funnel architect',
+    'Vyana builder'
+  ],
   authors: [{ name: 'Vybex Team' }],
   manifest: '/manifest.json',
   // icons metadata is automatically handled by Next.js since icon.png and apple-icon.png exist in the app directory
