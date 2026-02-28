@@ -76,7 +76,7 @@ export default function DemoPreview() {
                   >
                     <img
                       src={IMAGES[n % IMAGES.length]}
-                      alt={`preview ${n + 1}`}
+                      alt={`Vybex AI generated landing page preview ${n + 1}`}
                       className="w-full h-full object-cover"
                     />
                   </motion.div>
