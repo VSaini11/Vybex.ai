@@ -1,10 +1,18 @@
 import React from 'react'
 
 export default function JsonLd() {
-    const structuredData = {
+    const websiteData = {
+        '@context': 'https://schema.org',
+        '@type': 'WebSite',
+        'name': 'Vybex AI',
+        'alternateName': ['Vybex', 'Vybex AI Builder'],
+        'url': 'https://vybexai.vercel.app/',
+    }
+
+    const softwareData = {
         '@context': 'https://schema.org',
         '@type': 'SoftwareApplication',
-        'name': 'Vybex.ai',
+        'name': 'Vybex AI',
         'operatingSystem': 'Web',
         'applicationCategory': 'BusinessApplication',
         'offers': {
@@ -20,15 +28,21 @@ export default function JsonLd() {
         },
         'publisher': {
             '@type': 'Organization',
-            'name': 'Vybex.ai',
+            'name': 'Vybex AI',
             'url': 'https://vybex.ai',
         },
     }
 
     return (
-        <script
-            type="application/ld+json"
-            dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}
-        />
+        <>
+            <script
+                type="application/ld+json"
+                dangerouslySetInnerHTML={{ __html: JSON.stringify(websiteData) }}
+            />
+            <script
+                type="application/ld+json"
+                dangerouslySetInnerHTML={{ __html: JSON.stringify(softwareData) }}
+            />
+        </>
     )
 }
