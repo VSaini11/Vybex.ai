@@ -134,7 +134,8 @@ function TopNav({ onBack }: { onBack: () => void }) {
                     className="group flex items-center gap-2.5 px-4 py-2 rounded-xl border border-white/[0.07] bg-white/[0.03] hover:bg-white/[0.06] hover:border-white/[0.12] transition-all duration-200 text-sm font-medium text-white/60 hover:text-white"
                 >
                     <ArrowLeft className="w-3.5 h-3.5 group-hover:-translate-x-0.5 transition-transform" />
-                    Back to Vybex
+                    <span className="hidden sm:inline">Back to Vybex</span>
+                    <span className="sm:hidden">Back</span>
                 </button>
 
                 <div className="flex items-center gap-3">
@@ -146,7 +147,7 @@ function TopNav({ onBack }: { onBack: () => void }) {
                         />
                         <span className="text-[10px] font-black uppercase tracking-[0.2em] text-[#00ff41]">Vyana 2.0</span>
                     </div>
-                    <span className="text-[10px] text-white/20 font-mono">AI Workflow Architect</span>
+                    <span className="text-[10px] text-white/20 font-mono hidden sm:block">AI Workflow Architect</span>
                 </div>
             </div>
         </motion.div>
@@ -420,7 +421,7 @@ function FunnelSection({ steps, copiedIndex, onCopy }: {
                 {/* Timeline vertical line */}
                 <div className="absolute left-[22px] top-0 bottom-0 w-px hidden sm:block" style={{ background: 'linear-gradient(to bottom, rgba(0,255,65,0.3), rgba(0,255,65,0.05) 90%, transparent)' }} />
 
-                <div className="space-y-6">
+                <div className="space-y-10 sm:space-y-6">
                     {steps.map((step, i) => (
                         <StepCard
                             key={step.step_number}
@@ -448,6 +449,7 @@ function StepCard({ step, index, total, isCopied, onCopy }: {
     const ref = useRef<HTMLDivElement>(null)
     const isInView = useInView(ref, { once: true, margin: '-80px' })
     const [expanded, setExpanded] = useState(true)
+    const [isPromptExpanded, setIsPromptExpanded] = useState(false)
 
     const isLast = index === total - 1
     const accent = '#00ff41'
@@ -496,11 +498,11 @@ function StepCard({ step, index, total, isCopied, onCopy }: {
             >
                 {/* Card header */}
                 <div className="p-5 pb-4">
-                    <div className="flex items-start justify-between gap-3 mb-3">
+                    <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3 mb-3">
                         <h3 className="text-lg font-bold text-white leading-tight">{step.step_title}</h3>
                         {/* Tool pill */}
                         <div
-                            className="flex-shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[11px] font-bold whitespace-nowrap"
+                            className="flex-shrink-0 w-fit flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[11px] font-bold"
                             style={{
                                 background: 'rgba(0,255,65,0.08)',
                                 border: '1px solid rgba(0,255,65,0.2)',
@@ -532,9 +534,9 @@ function StepCard({ step, index, total, isCopied, onCopy }: {
                                     <div key={i} className="w-2.5 h-2.5 rounded-full" style={{ background: c, opacity: 0.7 }} />
                                 ))}
                             </div>
-                            <div className="flex items-center gap-1.5 ml-2 text-[10px] text-white/20 font-mono">
-                                <Terminal className="w-2.5 h-2.5" />
-                                prompt.txt
+                            <div className="flex items-center gap-1.5 ml-2 text-[10px] text-white/20 font-mono truncate">
+                                <Terminal className="w-2.5 h-2.5 flex-shrink-0" />
+                                <span className="truncate">prompt.txt</span>
                             </div>
                         </div>
                         <motion.button
@@ -551,11 +553,13 @@ function StepCard({ step, index, total, isCopied, onCopy }: {
                             <AnimatePresence mode="wait">
                                 {isCopied ? (
                                     <motion.span key="copied" initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }} className="flex items-center gap-1.5">
-                                        <Check className="w-3 h-3" /> Copied!
+                                        <Check className="w-3 h-3" />
+                                        <span className="hidden sm:inline text-nowrap">Copied!</span>
                                     </motion.span>
                                 ) : (
                                     <motion.span key="copy" initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }} className="flex items-center gap-1.5">
-                                        <Copy className="w-3 h-3" /> Copy Prompt
+                                        <Copy className="w-3 h-3" />
+                                        <span className="hidden sm:inline text-nowrap">Copy Prompt</span>
                                     </motion.span>
                                 )}
                             </AnimatePresence>
@@ -563,15 +567,47 @@ function StepCard({ step, index, total, isCopied, onCopy }: {
                     </div>
 
                     {/* Prompt text */}
-                    <div className="relative px-5 py-4">
+                    <div
+                        className={`relative px-5 py-4 overflow-hidden transition-all duration-500 ease-in-out ${!isPromptExpanded && step.prompt_to_use.length > 300 ? 'max-h-[240px] sm:max-h-none mb-2' : ''}`}
+                    >
                         <span className="text-[#00ff41]/40 font-mono text-xs mr-2 select-none">{'>'}</span>
-                        <span className="text-xs text-white/55 leading-relaxed font-mono whitespace-pre-wrap">{step.prompt_to_use}</span>
+                        <span className="text-[12px] sm:text-xs text-white/55 leading-relaxed font-mono whitespace-pre-wrap break-words">{step.prompt_to_use}</span>
                         {/* Blinking cursor */}
                         <motion.span
                             className="inline-block w-2 h-3 bg-[#00ff41]/50 ml-1 align-middle"
                             animate={{ opacity: [1, 0, 1] }}
                             transition={{ duration: 1.2, repeat: Infinity }}
                         />
+
+                        {/* Gradient fade and Show More toggle for mobile */}
+                        {!isPromptExpanded && step.prompt_to_use.length > 300 && (
+                            <div className="absolute bottom-0 inset-x-0 h-24 bg-gradient-to-t from-[#000] via-[#000]/90 to-transparent flex items-end justify-center pb-2 sm:hidden pointer-events-none">
+                                <button
+                                    onClick={(e) => {
+                                        e.preventDefault();
+                                        e.stopPropagation();
+                                        setIsPromptExpanded(true);
+                                    }}
+                                    className="pointer-events-auto text-[10px] font-black tracking-widest text-[#00ff41] bg-[#00ff41]/10 px-4 py-1.5 rounded-full border border-[#00ff41]/30 backdrop-blur-md shadow-[0_0_20px_rgba(0,255,65,0.15)] flex items-center gap-1.5"
+                                >
+                                    SHOW ENTIRE PROMPT
+                                    <ChevronRight className="w-3 h-3 rotate-90" />
+                                </button>
+                            </div>
+                        )}
+
+                        {/* Show Less toggle when expanded on mobile */}
+                        {isPromptExpanded && step.prompt_to_use.length > 300 && (
+                            <div className="mt-4 flex justify-center sm:hidden">
+                                <button
+                                    onClick={() => setIsPromptExpanded(false)}
+                                    className="text-[10px] font-black tracking-widest text-white/40 hover:text-[#00ff41] transition-colors flex items-center gap-1.5"
+                                >
+                                    SHOW LESS
+                                    <ChevronRight className="w-3 h-3 -rotate-90" />
+                                </button>
+                            </div>
+                        )}
                     </div>
                 </div>
             </motion.div>
