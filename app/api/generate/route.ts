@@ -64,7 +64,7 @@ NON-NEGOTIABLE UI RULES:
 - GLASSMORPHISM: Use Tailwind classes like "bg-white/10 backdrop-blur-md border border-white/20". Do NOT use custom component names for this.
 - COLORS: Strictly use the Background and Accent colors provided in the User Message.
 - NO PLACEHOLDERS: Code must be 100% complete. No "Add content here" or "TODO".
-- JSX SAFETY: Never use literal "<" or ">" symbols inside text content (e.g., in math expressions like "P < 0.01"). USE HTML ENTITIES like "&lt;" or "&gt;" instead to prevent parsing errors.
+- JSX SAFETY: Use normal "<" and ">" operators in JavaScript/TypeScript logic (e.g., in loops or if-statements). In JSX text content, if you need to show these symbols, wrap them in curly braces like {"<"} or {">"} to prevent parsing errors. NEVER use HTML entities like "&lt;" or "&gt;" in the source code.
 
 CODE QUALITY RULES:
 - Output ONLY raw TypeScript/React code. Zero markdown, zero explanation, zero code fences (\`\`\`).
@@ -370,6 +370,14 @@ export async function POST(req: NextRequest) {
     } else if (!cleaned.startsWith("'use client'")) {
       cleaned = "'use client';\n" + cleaned
     }
+
+    // Unescape HTML entities that Gemini sometimes incorrectly uses in code logic
+    cleaned = cleaned
+      .replace(/&lt;/g, '<')
+      .replace(/&gt;/g, '>')
+      .replace(/&amp;/g, '&')
+      .replace(/&quot;/g, '"')
+      .replace(/&#39;/g, "'")
 
     if (cleaned.length < 200) {
       throw new Error('AI returned insufficient content. Please try again.')
