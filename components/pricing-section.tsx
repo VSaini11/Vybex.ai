@@ -15,8 +15,8 @@ const PLANS = [
     featured: false,
     note: '',
     features: [
-      '7 generations per month',
-      'Max 3 generations per day',
+      '20 generations per month',
+      'Max 20 generations per day',
       'Standard theme only',
       'Max 1,800 token output',
       'Watermark in footer',

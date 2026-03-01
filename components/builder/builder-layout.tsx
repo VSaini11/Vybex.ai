@@ -14,6 +14,7 @@ import FileExplorer from './file-explorer'
 import MonacoEditorPanel from './monaco-editor-panel'
 import PreviewPanel from './preview-panel'
 import BuilderTopBar from './builder-topbar'
+import FollowupChat from './followup-chat'
 import type { GeneratedProject } from '@/lib/builder-types'
 import GenerationLog from './generation-log'
 import {
@@ -29,12 +30,14 @@ interface BuilderLayoutProps {
     isLoading: boolean
     status: string | null
     error: string | null
+    refinementCount: number
     onSelectFile: (path: string) => void
     onTabClick: (path: string) => void
     onTabClose: (path: string) => void
     onBack: () => void
     onRegenerate: () => void
     onDownloadZip: () => void
+    onRefine: (message: string) => void
 }
 
 const panelClass =
@@ -51,12 +54,14 @@ export default function BuilderLayout({
     isLoading,
     status,
     error,
+    refinementCount,
     onSelectFile,
     onTabClick,
     onTabClose,
     onBack,
     onRegenerate,
     onDownloadZip,
+    onRefine,
 }: BuilderLayoutProps) {
     const [viewMode, setViewMode] = useState<'chat' | 'preview' | 'code'>('chat')
     const [isSidebarOpen, setIsSidebarOpen] = useState(true)
@@ -164,6 +169,15 @@ export default function BuilderLayout({
                             )}
                         </AnimatePresence>
                     </div>
+
+                    {/* AI Follow-up Chat */}
+                    {project && !error && (
+                        <FollowupChat
+                            onRefine={onRefine}
+                            isLoading={isLoading}
+                            refinementCount={refinementCount}
+                        />
+                    )}
 
                     {/* Bottom Sidebar Toggle Arrow */}
                     <button

@@ -271,8 +271,8 @@ export default function DashboardPage() {
                                     <div className="h-px bg-white/5" />
                                     <ul className="space-y-3 md:space-y-4">
                                         {[
-                                            '7 generations per month',
-                                            'Max 3 generations per day',
+                                            '20 generations per month',
+                                            'Max 20 generations per day',
                                             'Standard theme access',
                                             'Basic AI logic',
                                             'Community support'

@@ -24,12 +24,12 @@ export async function GET(req: NextRequest) {
         // Auto-heal existing user limits
         let hasChanges = false;
         if (user.plan === 'free') {
-            if (user.monthlyGenerationLimit !== 7) {
-                user.monthlyGenerationLimit = 7;
+            if (user.monthlyGenerationLimit !== 20) {
+                user.monthlyGenerationLimit = 20;
                 hasChanges = true;
             }
-            if (user.dailyGenerationLimit !== 3) {
-                user.dailyGenerationLimit = 3;
+            if (user.dailyGenerationLimit !== 20) {
+                user.dailyGenerationLimit = 20;
                 hasChanges = true;
             }
         } else if (user.plan === 'none') {

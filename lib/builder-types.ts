@@ -19,4 +19,5 @@ export interface BuilderState {
     isLoading: boolean
     status: string | null
     error: string | null
+    refinementCount: number
 }

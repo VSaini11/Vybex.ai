@@ -189,11 +189,12 @@ export function useBuilder() {
     isLoading: false,
     status: null,
     error: null,
+    refinementCount: 0,
   })
   const [prompt, setPromptState] = useState('')
 
   const generate = useCallback(async (p: string) => {
-    setState(s => ({ ...s, isLoading: true, status: 'Generating folder structure...', error: null }))
+    setState(s => ({ ...s, isLoading: true, status: 'Generating folder structure...', error: null, refinementCount: 0 }))
     setPromptState(p)
 
     try {
@@ -239,12 +240,56 @@ export function useBuilder() {
         isLoading: false,
         status: null,
         error: null,
+        refinementCount: 0,
       })
     } catch (err: any) {
       console.error('Generation failure:', err)
       setState(s => ({ ...s, isLoading: false, status: null, error: err.message || 'Service unavailable' }))
     }
   }, [])
+
+  const refine = useCallback(async (followupMessage: string) => {
+    if (state.refinementCount >= 5) {
+      setState(s => ({ ...s, error: 'Maximum refinement limit (5) reached for this session.' }))
+      return
+    }
+
+    if (!state.project) return
+
+    setState(s => ({ ...s, isLoading: true, status: 'Applying refinements...', error: null }))
+
+    try {
+      const currentCode = state.project.fileMap['app/page.tsx']?.content || ''
+
+      const response = await fetch('/api/followup', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          originalPrompt: prompt,
+          currentCode,
+          followupMessage
+        }),
+      })
+
+      const data = await response.json()
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Refinement failed')
+      }
+
+      setState(s => ({
+        ...s,
+        project: data,
+        isLoading: false,
+        status: null,
+        error: null,
+        refinementCount: s.refinementCount + 1,
+      }))
+    } catch (err: any) {
+      console.error('Refinement failure:', err)
+      setState(s => ({ ...s, isLoading: false, status: null, error: err.message || 'Refinement failed' }))
+    }
+  }, [state.project, state.refinementCount, prompt])
 
   const setActiveFile = useCallback((path: string) => {
     setState(s => ({
@@ -290,6 +335,7 @@ export function useBuilder() {
       isLoading: false,
       status: null,
       error: null,
+      refinementCount: 0,
     })
     setPromptState('')
   }, [])
@@ -298,6 +344,7 @@ export function useBuilder() {
     ...state,
     prompt,
     generate,
+    refine,
     setActiveFile,
     closeTab,
     regenerate,

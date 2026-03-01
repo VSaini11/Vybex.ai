@@ -4,6 +4,7 @@ import connectDB from '@/lib/mongodb'
 import User from '@/models/User'
 import { getAuthToken, verifyToken } from '@/lib/auth'
 import { isPromptOffensive } from '@/lib/moderation'
+import { validateAndFixCode } from '@/lib/code-validator'
 
 // ─────────────────────────────────────────
 // Rate limiting
@@ -70,7 +71,8 @@ CODE QUALITY RULES:
 - Output ONLY raw TypeScript/React code. Zero markdown, zero explanation, zero code fences (\`\`\`).
 - JSX tags MUST BE PERFECTLY BALANCED. Every <div> must have a matching </div>.
 - Framer Motion: whileInView={{ opacity:1, y:0 }} viewport={{ once:true }} on all sections.
-- Min 4 distinct sections + Navbar + Footer.`
+- Min 4 distinct sections + Navbar + Footer.
+- CRITICAL: NEVER use HTML entities like "&lt;", "&gt;", "&amp;", "&quot;", or "&#39;" in the source code. ALWAYS use actual characters (<, >, &, ", ') even in logic. This is essential for the preview to work.`
 
 // ─────────────────────────────────────────
 // DYNAMIC user message (changes every call — no caching)
@@ -338,7 +340,7 @@ export async function POST(req: NextRequest) {
 
     const limits = {
       none: { generations: 0, dailyLimit: 0, tokens: 0 },
-      free: { generations: 7, dailyLimit: 3, tokens: 16384 },
+      free: { generations: 20, dailyLimit: 20, tokens: 16384 },
       pro: { generations: 100, dailyLimit: 100, tokens: 32768 },
       pro_plus: { generations: 300, dailyLimit: 300, tokens: 65536 },
     }
@@ -354,36 +356,43 @@ export async function POST(req: NextRequest) {
     }
 
     // Build a unique user message with design variables embedded
-    const userMessage = buildUserMessage(prompt, user.plan, user.plan === 'free')
-    const rawPage = await generatePage(userMessage, userLimit.tokens)
+    let userMessage = buildUserMessage(prompt, user.plan, user.plan === 'free')
+    let attempts = 0
+    let finalCode = ''
+    let lastError = ''
 
-    // Strip accidental markdown fences and fix malformed 'use client'
-    let cleaned = rawPage
-      .trim()
-      .replace(/^```(?:tsx?|jsx?|typescript)?\s*/i, '')
-      .replace(/\s*```$/, '')
-      .trim()
+    while (attempts < 3) {
+      const promptToUse = attempts === 0
+        ? userMessage
+        : `Fix all syntax errors in this code and return full corrected file:\n\n${finalCode}\n\nError: ${lastError}`
 
-    // Auto-fix broken 'use client' (e.g. missing opening quote)
-    if (cleaned.match(/^\s*use client['"]?;?/i)) {
-      cleaned = cleaned.replace(/^\s*use client['"]?;?/i, "'use client';")
-    } else if (!cleaned.startsWith("'use client'")) {
-      cleaned = "'use client';\n" + cleaned
+      const rawPage = await generatePage(promptToUse, userLimit.tokens)
+
+      // Strip accidental markdown fences
+      let codeStr = rawPage
+        .trim()
+        .replace(/^```(?:tsx?|jsx?|typescript)?\s*/i, '')
+        .replace(/\s*```$/, '')
+        .trim()
+
+      // Validate and Fix the code (handles HTML entities, 'use client', etc.)
+      const { isValid, code: cleaned, error: validationError } = validateAndFixCode(codeStr)
+
+      finalCode = cleaned
+      if (isValid && cleaned.length >= 200) {
+        break
+      }
+
+      attempts++
+      lastError = validationError || 'Code too short or invalid structure'
+      console.warn(`[Vyana1] ⚠️ Syntax Error (Attempt ${attempts}):`, lastError)
     }
 
-    // Unescape HTML entities that Gemini sometimes incorrectly uses in code logic
-    cleaned = cleaned
-      .replace(/&lt;/g, '<')
-      .replace(/&gt;/g, '>')
-      .replace(/&amp;/g, '&')
-      .replace(/&quot;/g, '"')
-      .replace(/&#39;/g, "'")
-
-    if (cleaned.length < 200) {
-      throw new Error('AI returned insufficient content. Please try again.')
+    if (finalCode.length < 200) {
+      throw new Error('AI failed to generate valid code after multiple attempts.')
     }
 
-    const project = buildProject(cleaned)
+    const project = buildProject(finalCode)
 
     user.generationsUsed += 1
     user.dailyGenerationsUsed += 1

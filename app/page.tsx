@@ -24,6 +24,8 @@ export default function Home() {
     regenerate,
     downloadZip,
     reset,
+    refine,
+    refinementCount
   } = useBuilder()
 
   const showBuilder = isLoading || project !== null || error !== null
@@ -51,12 +53,14 @@ export default function Home() {
             isLoading={isLoading}
             status={status}
             error={error}
+            refinementCount={refinementCount}
             onSelectFile={setActiveFile}
             onTabClick={setActiveFile}
             onTabClose={closeTab}
             onBack={reset}
             onRegenerate={regenerate}
             onDownloadZip={downloadZip}
+            onRefine={refine}
           />
         )}
       </AnimatePresence>

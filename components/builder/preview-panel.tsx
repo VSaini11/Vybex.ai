@@ -136,9 +136,6 @@ function buildPreviewHtml(pageContent: string): string {
           .replace(/export\\s+(?!default)/g, '/* export */ ')
           .replace(/<style\\s+jsx[^>]*>([\\s\\S]*?)<\\/style>/gi, '<style>$1</style>') // Fix <style jsx> warnings
           .replace(/via\\.placeholder\\.com/g, 'placehold.co') // Fix broken placeholder service
-          // ESCAPE LITERAL "<" THAT BREAK JSX:
-          // Match "<" that is NOT followed by a letter (start of tag) or "/" (end of tag)
-          .replace(/<(?![a-zA-Z\\/])/g, '&lt;') 
           // Match "..." that might be malformed in tags
           .replace(/\\{\\s*\\.\\.\\.\\s*\\}/g, ''); 
 

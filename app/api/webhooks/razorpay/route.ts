@@ -69,8 +69,8 @@ export async function POST(req: NextRequest) {
 
             if (user) {
                 let newPlan = 'free';
-                let monthlyLimit = 7;
-                let dailyLimit = 3;
+                let monthlyLimit = 20;
+                let dailyLimit = 20;
 
                 // Map amounts back to plans (Amount is in paise)
                 if (amount >= 149900) { // ₹1,499.00
@@ -83,8 +83,8 @@ export async function POST(req: NextRequest) {
                     dailyLimit = 100;
                 } else if (amount >= 100) { // ₹1.00
                     newPlan = 'free';
-                    monthlyLimit = 7;
-                    dailyLimit = 3;
+                    monthlyLimit = 20;
+                    dailyLimit = 20;
                 }
 
                 console.log(`Updating user ${user.email} (ID: ${user._id}) to plan: ${newPlan}, M-Limit: ${monthlyLimit}, D-Limit: ${dailyLimit}`);
