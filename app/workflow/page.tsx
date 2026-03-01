@@ -7,6 +7,8 @@ import {
     ArrowLeft, Copy, Check, ChevronRight, Zap, Layers,
     ListChecks, Sparkles, Terminal, ExternalLink, ArrowRight
 } from 'lucide-react'
+import TiredVyana from '@/components/tired-vyana'
+import { VYANA_TIRED_ERROR } from '@/lib/ai-errors'
 
 interface FunnelStep {
     step_number: number
@@ -269,6 +271,14 @@ function LoadingState({ goal }: { goal: string }) {
 
 /* ─── Error State ────────────────────────────────────────────────────── */
 function ErrorState({ message, onRetry }: { message: string; onRetry: () => void }) {
+    if (message === VYANA_TIRED_ERROR) {
+        return (
+            <div className="flex flex-col items-center justify-center min-h-[80vh] px-4">
+                <TiredVyana onRetry={onRetry} />
+            </div>
+        )
+    }
+
     return (
         <motion.div
             initial={{ opacity: 0, y: 20 }}

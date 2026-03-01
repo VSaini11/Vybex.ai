@@ -3,6 +3,7 @@
 import { useState, useCallback } from 'react'
 import type { GeneratedProject, BuilderState } from '@/lib/builder-types'
 import JSZip from 'jszip'
+import { VYANA_TIRED_ERROR } from '@/lib/ai-errors'
 
 function generateMockProject(prompt: string): GeneratedProject {
   const ts = `import type { Metadata } from 'next'

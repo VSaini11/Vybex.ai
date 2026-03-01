@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { GoogleGenerativeAI } from '@google/generative-ai'
+import { isQuotaError, VYANA_TIRED_ERROR } from '@/lib/ai-errors'
 
 const VYANA2_SYSTEM_PROMPT = `You are Vyana 2.0 — an AI Workflow Architect built by Vybex Studio.
 
@@ -106,6 +107,9 @@ export async function POST(req: NextRequest) {
     return NextResponse.json(data)
   } catch (err: any) {
     console.error('[vyana2 API error]', err)
+    if (isQuotaError(err)) {
+      return NextResponse.json({ error: VYANA_TIRED_ERROR }, { status: 429 })
+    }
     return NextResponse.json({ error: err.message || 'Internal Server Error' }, { status: 500 })
   }
 }

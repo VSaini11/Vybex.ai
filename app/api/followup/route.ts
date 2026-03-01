@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { GoogleGenerativeAI } from '@google/generative-ai'
 import { validateAndFixCode } from '@/lib/code-validator'
+import { isQuotaError, VYANA_TIRED_ERROR } from '@/lib/ai-errors'
 
 const SYSTEM_INSTRUCTION = `You are Vyana 2.1 — an elite AI frontend engineer specialized in refining and perfecting landing pages.
 You receive existing code and a refinement instruction. Your goal is to apply the instruction while maintaining the premium quality, animations, and structure of the original code.
@@ -140,6 +141,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         return NextResponse.json(project)
     } catch (err: any) {
         console.error('AI Refinement Error:', err)
+        if (isQuotaError(err)) {
+            return NextResponse.json({ error: VYANA_TIRED_ERROR }, { status: 429 })
+        }
         return NextResponse.json({ error: err.message || 'Refinement failed' }, { status: 500 })
     }
 }

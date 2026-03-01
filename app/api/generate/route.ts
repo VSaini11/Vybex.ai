@@ -5,6 +5,7 @@ import User from '@/models/User'
 import { getAuthToken, verifyToken } from '@/lib/auth'
 import { isPromptOffensive } from '@/lib/moderation'
 import { validateAndFixCode } from '@/lib/code-validator'
+import { isQuotaError, VYANA_TIRED_ERROR } from '@/lib/ai-errors'
 
 // ─────────────────────────────────────────
 // Rate limiting
@@ -410,6 +411,9 @@ export async function POST(req: NextRequest) {
     })
   } catch (err: any) {
     console.error('AI Generation Error:', err)
+    if (isQuotaError(err)) {
+      return NextResponse.json({ error: VYANA_TIRED_ERROR }, { status: 429 })
+    }
     return NextResponse.json({ error: err.message || 'Generation failed' }, { status: 500 })
   }
 }

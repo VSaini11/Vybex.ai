@@ -3,6 +3,8 @@
 import { motion, AnimatePresence } from 'framer-motion'
 import { FileCode2, Loader2, CheckCircle2, Terminal, AlertCircle } from 'lucide-react'
 import { useEffect, useState, useRef } from 'react'
+import TiredVyana from '@/components/tired-vyana'
+import { VYANA_TIRED_ERROR } from '@/lib/ai-errors'
 
 interface LogEntry {
     type: 'step' | 'file' | 'error'
@@ -69,12 +71,18 @@ export default function GenerationLog({ status, isLoading, error }: GenerationLo
                 {history.map((entry, idx) => (
                     <div key={idx} className="space-y-4">
                         {entry.type === 'error' ? (
-                            <div className="flex items-start gap-3 p-4 rounded-lg bg-destructive/10 border border-destructive/20 text-destructive text-sm">
-                                <AlertCircle className="w-5 h-5 flex-shrink-0" />
-                                <div>
-                                    <div className="font-bold mb-1">Build Error</div>
-                                    <div className="opacity-80">{entry.message}</div>
-                                </div>
+                            <div className="flex flex-col items-center">
+                                {entry.message === VYANA_TIRED_ERROR ? (
+                                    <TiredVyana />
+                                ) : (
+                                    <div className="flex items-start gap-3 p-4 rounded-lg bg-destructive/10 border border-destructive/20 text-destructive text-sm w-full">
+                                        <AlertCircle className="w-5 h-5 flex-shrink-0" />
+                                        <div>
+                                            <div className="font-bold mb-1">Build Error</div>
+                                            <div className="opacity-80">{entry.message}</div>
+                                        </div>
+                                    </div>
+                                )}
                             </div>
                         ) : (
                             <LogItem

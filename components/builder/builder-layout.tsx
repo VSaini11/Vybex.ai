@@ -22,6 +22,8 @@ import {
     ResizablePanel,
     ResizablePanelGroup,
 } from "@/components/ui/resizable"
+import TiredVyana from '@/components/tired-vyana'
+import { VYANA_TIRED_ERROR } from '@/lib/ai-errors'
 
 interface BuilderLayoutProps {
     project: GeneratedProject | null
@@ -202,19 +204,25 @@ function EditorSection({ isLoading, error, project, activeContent, activeLanguag
                     animate={{ opacity: 1 }}
                     className="flex-1 flex flex-col items-center justify-center p-6 text-center"
                 >
-                    <div className="w-16 h-16 rounded-full bg-destructive/10 flex items-center justify-center mb-6">
-                        <span className="text-3xl text-destructive">⚠️</span>
-                    </div>
-                    <h3 className="text-lg font-bold text-foreground mb-2">Generation Failed</h3>
-                    <p className="text-sm text-muted-foreground max-w-sm mb-6">
-                        {error}
-                    </p>
-                    <button
-                        onClick={onBack}
-                        className="px-6 py-2 rounded-xl border border-border bg-card hover:bg-white/5 transition-all"
-                    >
-                        Go Back
-                    </button>
+                    {error === VYANA_TIRED_ERROR ? (
+                        <TiredVyana onRetry={onBack} />
+                    ) : (
+                        <>
+                            <div className="w-16 h-16 rounded-full bg-destructive/10 flex items-center justify-center mb-6">
+                                <span className="text-3xl text-destructive">⚠️</span>
+                            </div>
+                            <h3 className="text-lg font-bold text-foreground mb-2">Generation Failed</h3>
+                            <p className="text-sm text-muted-foreground max-w-sm mb-6">
+                                {error}
+                            </p>
+                            <button
+                                onClick={onBack}
+                                className="px-6 py-2 rounded-xl border border-border bg-card hover:bg-white/5 transition-all"
+                            >
+                                Go Back
+                            </button>
+                        </>
+                    )}
                 </motion.div>
             ) : isLoading ? (
                 <motion.div
