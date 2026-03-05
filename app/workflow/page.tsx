@@ -65,8 +65,13 @@ function WorkflowPageInner() {
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ goal }),
                 })
-                if (!res.ok) throw new Error(`Server error: ${res.status}`)
+                if (!res.ok) {
+                    const errorJson = await res.json().catch(() => ({}));
+                    if (errorJson.error === VYANA_TIRED_ERROR) throw new Error(VYANA_TIRED_ERROR);
+                    throw new Error(errorJson.error || `Server error: ${res.status}`);
+                }
                 const json = await res.json()
+                if (json.error === VYANA_TIRED_ERROR) throw new Error(VYANA_TIRED_ERROR);
                 if (json.error) throw new Error(json.error)
                 setData(json)
             } catch (err: any) {
@@ -87,7 +92,7 @@ function WorkflowPageInner() {
     }, [])
 
     return (
-        <div className="min-h-screen text-white overflow-x-hidden" style={{ background: '#000000' }}>
+        <main className="min-h-screen text-white overflow-x-hidden relative z-10" style={{ background: '#000000' }}>
             {/* Global ambient background */}
             <div className="fixed inset-0 pointer-events-none">
                 {/* Deep vignette */}
@@ -118,7 +123,7 @@ function WorkflowPageInner() {
                     <WorkflowResult key="result" data={data} copiedIndex={copiedIndex} onCopy={copyPrompt} />
                 ) : null}
             </AnimatePresence>
-        </div>
+        </main>
     )
 }
 
@@ -273,7 +278,7 @@ function LoadingState({ goal }: { goal: string }) {
 function ErrorState({ message, onRetry }: { message: string; onRetry: () => void }) {
     if (message === VYANA_TIRED_ERROR) {
         return (
-            <div className="flex flex-col items-center justify-center min-h-[80vh] px-4">
+            <div className="flex flex-col items-center justify-center min-h-[calc(100vh-64px)] px-4">
                 <TiredVyana onRetry={onRetry} />
             </div>
         )
@@ -283,12 +288,20 @@ function ErrorState({ message, onRetry }: { message: string; onRetry: () => void
         <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="flex flex-col items-center justify-center min-h-[80vh] px-4 text-center"
+            className="flex flex-col items-center justify-center min-h-[calc(100vh-64px)] px-4 text-center"
         >
-            <div className="w-20 h-20 rounded-3xl bg-red-500/10 border border-red-500/20 flex items-center justify-center mb-8 text-4xl">⚠️</div>
-            <h3 className="text-2xl font-bold text-white mb-3">Workflow Generation Failed</h3>
-            <p className="text-sm text-white/40 mb-10 max-w-sm leading-relaxed">{message}</p>
-            <button onClick={onRetry} className="px-8 py-3.5 rounded-2xl bg-[#00ff41] text-black font-bold text-sm hover:scale-105 active:scale-95 transition-all" style={{ boxShadow: '0 0 30px rgba(0,255,65,0.3)' }}>
+            <div className="relative mb-12">
+                <div className="w-24 h-24 rounded-3xl bg-red-500/10 border border-red-500/20 flex items-center justify-center relative z-10">
+                    <span className="text-4xl text-red-500">⚠️</span>
+                </div>
+                <div className="absolute inset-0 bg-red-500/20 blur-[60px] rounded-full -z-10" />
+            </div>
+            <h3 className="text-3xl font-black text-white mb-4">Workflow Generation Failed</h3>
+            <p className="text-white/40 text-base leading-relaxed mb-10 max-w-sm">{message}</p>
+            <button
+                onClick={onRetry}
+                className="px-10 py-4 rounded-2xl bg-[#00ff41] text-black font-black text-sm hover:scale-105 active:scale-95 transition-all shadow-[0_0_30px_rgba(0,255,65,0.3)]"
+            >
                 Try Again
             </button>
         </motion.div>

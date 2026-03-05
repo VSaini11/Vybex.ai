@@ -16,7 +16,8 @@ export default function TiredVyana({
         <motion.div
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
-            className="flex flex-col items-center justify-center p-8 text-center"
+            className="flex flex-col items-center justify-center p-8 text-center relative z-20"
+            style={{ filter: 'brightness(1.15) contrast(1.1)' }}
         >
             <div className="relative mb-12">
                 {/* Sleeping Vyana Avatar/Icon */}
@@ -74,25 +75,25 @@ export default function TiredVyana({
                 transition={{ delay: 0.2 }}
                 className="max-w-md"
             >
-                <h3 className="text-2xl font-black text-white mb-4 flex items-center justify-center gap-3">
+                <h3 className="text-3xl font-black text-white mb-4 flex items-center justify-center gap-3">
                     Vyana is taking a break
                 </h3>
-                <p className="text-white/50 text-base leading-relaxed mb-10">
+                <p className="text-white text-lg leading-relaxed mb-10 font-medium">
                     {message}
                 </p>
 
-                <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-                    <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-white/5 border border-white/10 text-xs font-mono text-white/40">
-                        <Timer className="w-3.5 h-3.5" />
+                <div className="flex flex-col sm:flex-row items-center justify-center gap-6">
+                    <div className="flex items-center gap-2 px-5 py-2.5 rounded-full bg-white/10 border border-white/20 text-xs font-bold font-mono text-white">
+                        <Timer className="w-4 h-4 text-amber-500" />
                         Quota resets soon
                     </div>
 
                     {onRetry && (
                         <button
                             onClick={onRetry}
-                            className="group flex items-center gap-2 px-6 py-2.5 rounded-xl bg-amber-500 text-black font-bold text-sm hover:bg-amber-400 transition-all active:scale-95"
+                            className="group flex items-center gap-3 px-8 py-3 rounded-2xl bg-amber-400 text-black font-black text-base hover:bg-amber-300 transition-all active:scale-95 shadow-[0_0_25px_rgba(251,191,36,0.4)]"
                         >
-                            <RefreshCcw className="w-4 h-4 group-hover:rotate-180 transition-transform duration-500" />
+                            <RefreshCcw className="w-5 h-5 group-hover:rotate-180 transition-transform duration-500" />
                             Try Again
                         </button>
                     )}

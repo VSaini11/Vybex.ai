@@ -2,9 +2,10 @@
 
 import { motion, AnimatePresence } from 'framer-motion'
 import { useState, useRef } from 'react'
-import { ArrowUp, ChevronDown } from 'lucide-react'
+import { ArrowUp, ChevronDown, Paperclip, X, FileText, Image as ImageIcon } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import VyanaAssistant from './vyana-assistant'
+import { sessionStore } from '@/lib/session-store'
 
 interface HeroSectionProps {
   onGenerate?: (prompt: string) => void
@@ -12,7 +13,7 @@ interface HeroSectionProps {
 
 const MAX_CHARS = 1800
 
-type Model = 'vyana1' | 'vyana2'
+type Model = 'vyana1' | 'vyana2' | 'vyana3'
 
 const MODEL_OPTIONS: { id: Model; label: string; badge: string; description: string }[] = [
   {
@@ -27,13 +28,21 @@ const MODEL_OPTIONS: { id: Model; label: string; badge: string; description: str
     badge: 'Architect',
     description: 'Design an AI workflow funnel',
   },
+  {
+    id: 'vyana3',
+    label: 'Vyana 3.0',
+    badge: 'Extractor',
+    description: 'Extract info from docs/images',
+  },
 ]
 
 export default function HeroSection({ onGenerate }: HeroSectionProps) {
   const [prompt, setPrompt] = useState('')
   const [selectedModel, setSelectedModel] = useState<Model>('vyana1')
   const [dropdownOpen, setDropdownOpen] = useState(false)
+  const [file, setFile] = useState<{ name: string; base64: string; mimeType: string } | null>(null)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
+  const fileInputRef = useRef<HTMLInputElement>(null)
   const dropdownRef = useRef<HTMLDivElement>(null)
   const router = useRouter()
 
@@ -41,13 +50,35 @@ export default function HeroSection({ onGenerate }: HeroSectionProps) {
   const activeModel = MODEL_OPTIONS.find(m => m.id === selectedModel)!
 
   const handleGenerate = () => {
-    if (!prompt.trim()) return
+    if (!prompt.trim() && !file) return
 
     if (selectedModel === 'vyana2') {
       router.push(`/workflow?goal=${encodeURIComponent(prompt.trim())}`)
+    } else if (selectedModel === 'vyana3') {
+      const storageKey = `vyana3_upload_${Date.now()}`
+      if (file) {
+        sessionStore.set(storageKey, file)
+      }
+      router.push(`/extract?prompt=${encodeURIComponent(prompt.trim())}${file ? `&fileKey=${storageKey}` : ''}`)
     } else {
       onGenerate?.(prompt)
     }
+  }
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const selectedFile = e.target.files?.[0]
+    if (!selectedFile) return
+
+    const reader = new FileReader()
+    reader.onloadend = () => {
+      const base64 = reader.result?.toString().split(',')[1] || ''
+      setFile({
+        name: selectedFile.name,
+        base64,
+        mimeType: selectedFile.type
+      })
+    }
+    reader.readAsDataURL(selectedFile)
   }
 
   // Close dropdown on outside click
@@ -156,8 +187,8 @@ export default function HeroSection({ onGenerate }: HeroSectionProps) {
                             setDropdownOpen(false)
                           }}
                           className={`w-full flex items-start gap-3 px-4 py-3 text-left transition-colors ${selectedModel === option.id
-                              ? 'bg-accent/5 border-l-2 border-accent'
-                              : 'hover:bg-white/5 border-l-2 border-transparent'
+                            ? 'bg-accent/5 border-l-2 border-accent'
+                            : 'hover:bg-white/5 border-l-2 border-transparent'
                             }`}
                         >
                           <div className="flex-1 min-w-0">
@@ -185,20 +216,47 @@ export default function HeroSection({ onGenerate }: HeroSectionProps) {
                 </AnimatePresence>
               </div>
 
-              {/* Vyana 2.0 badge hint */}
+              {/* Vyana 2.0 / 3.0 badge hint */}
               <AnimatePresence>
-                {selectedModel === 'vyana2' && (
+                {(selectedModel === 'vyana2' || selectedModel === 'vyana3') && (
                   <motion.span
                     initial={{ opacity: 0, x: -6 }}
                     animate={{ opacity: 1, x: 0 }}
                     exit={{ opacity: 0, x: -6 }}
                     className="text-[10px] text-accent/60 font-medium italic"
                   >
-                    ✦ Workflow Architect mode
+                    ✦ {selectedModel === 'vyana2' ? 'Workflow Architect mode' : 'Multimodal Extractor mode'}
                   </motion.span>
                 )}
               </AnimatePresence>
             </div>
+
+            {/* File Preview (Vyana 3.0) */}
+            <AnimatePresence>
+              {selectedModel === 'vyana3' && file && (
+                <motion.div
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: 'auto' }}
+                  exit={{ opacity: 0, height: 0 }}
+                  className="px-6 pt-3"
+                >
+                  <div className="flex items-center gap-3 p-2 rounded-xl bg-accent/5 border border-accent/20 w-fit">
+                    {file.mimeType.startsWith('image/') ? (
+                      <ImageIcon className="w-4 h-4 text-accent" />
+                    ) : (
+                      <FileText className="w-4 h-4 text-accent" />
+                    )}
+                    <span className="text-xs text-foreground/80 font-medium">{file.name}</span>
+                    <button
+                      onClick={() => setFile(null)}
+                      className="p-1 hover:bg-accent/10 rounded-full transition-colors"
+                    >
+                      <X className="w-3 h-3 text-muted-foreground hover:text-foreground" />
+                    </button>
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
 
             {/* Textarea */}
             <textarea
@@ -208,7 +266,9 @@ export default function HeroSection({ onGenerate }: HeroSectionProps) {
               placeholder={
                 selectedModel === 'vyana2'
                   ? 'Describe your goal — e.g. build a pitch deck, grow Instagram, create a logo, launch a SaaS MVP…'
-                  : 'Describe your startup, the problem you solve, your target audience, and key features…'
+                  : selectedModel === 'vyana3'
+                    ? 'What should I do with this file? E.g. summarize it, extract info, what color is the sky in this image?'
+                    : 'Describe your startup, the problem you solve, your target audience, and key features…'
               }
               className="w-full bg-transparent text-foreground placeholder:text-muted-foreground/50 resize-none outline-none px-6 pt-5 pb-4 text-base leading-relaxed min-h-[140px] md:min-h-[120px]"
               rows={4}
@@ -235,6 +295,24 @@ export default function HeroSection({ onGenerate }: HeroSectionProps) {
 
               {/* Char count + button */}
               <div className="flex items-center justify-between sm:justify-end gap-4">
+                {selectedModel === 'vyana3' && (
+                  <>
+                    <input
+                      type="file"
+                      ref={fileInputRef}
+                      onChange={handleFileChange}
+                      className="hidden"
+                      accept="image/*,application/pdf,text/plain"
+                    />
+                    <button
+                      onClick={() => fileInputRef.current?.click()}
+                      className="p-2 rounded-xl border border-border bg-background/60 hover:border-accent/40 transition-colors text-muted-foreground hover:text-foreground"
+                      title="Attach File"
+                    >
+                      <Paperclip className="w-4 h-4" />
+                    </button>
+                  </>
+                )}
                 <span className="text-xs text-muted-foreground tabular-nums">
                   {prompt.length}/{MAX_CHARS}
                 </span>
@@ -264,11 +342,11 @@ export default function HeroSection({ onGenerate }: HeroSectionProps) {
                   </div>
                   <button
                     onClick={handleGenerate}
-                    disabled={!prompt.trim()}
+                    disabled={!prompt.trim() && !file}
                     className="flex items-center justify-center gap-2 px-6 py-2.5 rounded-xl bg-accent text-background font-semibold text-sm hover:bg-accent/90 transition-all duration-200 hover:scale-105 active:scale-95 shadow-lg flex-1 sm:flex-initial disabled:opacity-40 disabled:cursor-not-allowed disabled:scale-100"
                     style={{ boxShadow: '0 0 20px rgba(0,255,65,0.3)' }}
                   >
-                    {selectedModel === 'vyana2' ? 'Design Workflow' : 'Generate Now'}
+                    {selectedModel === 'vyana2' ? 'Design Workflow' : selectedModel === 'vyana3' ? 'Extract Info' : 'Generate Now'}
                     <ArrowUp className="w-4 h-4" />
                   </button>
                 </div>
