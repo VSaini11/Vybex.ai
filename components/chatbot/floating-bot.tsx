@@ -80,26 +80,31 @@ const botVariants: Variants = {
 export default function FloatingBot({ onClick, isOpen }: FloatingBotProps) {
   const [isIdle, setIsIdle] = useState(false)
   const [hasReachedLeft, setHasReachedLeft] = useState(false)
+  const [isHovering, setIsHovering] = useState(false)
   const idleTimerRef = useRef<NodeJS.Timeout | null>(null)
 
-  const resetIdleTimer = useCallback(() => {
+  const stopIdleTimer = useCallback(() => {
     setIsIdle(false)
     setHasReachedLeft(false)
-    if (idleTimerRef.current) clearTimeout(idleTimerRef.current)
-    
-    if (!isOpen) {
+    if (idleTimerRef.current) {
+      clearTimeout(idleTimerRef.current)
+      idleTimerRef.current = null
+    }
+  }, [])
+
+  const startIdleTimer = useCallback(() => {
+    stopIdleTimer()
+    if (!isOpen && !isHovering) {
       idleTimerRef.current = setTimeout(() => {
         setIsIdle(true)
       }, 3000)
     }
-  }, [isOpen])
+  }, [isOpen, isHovering, stopIdleTimer])
 
   useEffect(() => {
-    resetIdleTimer()
-    return () => {
-      if (idleTimerRef.current) clearTimeout(idleTimerRef.current)
-    }
-  }, [resetIdleTimer, isOpen])
+    startIdleTimer()
+    return stopIdleTimer
+  }, [startIdleTimer, stopIdleTimer])
 
   // Determine current active variant
   let activeVariant = 'base'
@@ -111,21 +116,6 @@ export default function FloatingBot({ onClick, isOpen }: FloatingBotProps) {
 
   return (
     <div className="fixed bottom-6 right-6 z-[101]">
-      <AnimatePresence>
-        {isIdle && !hasReachedLeft && !isOpen && (
-          <motion.div
-            initial={{ opacity: 0, y: 10, scale: 0.8 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.8 }}
-            className="absolute bottom-full mb-4 left-0 right-0 flex justify-center translate-x-[calc(-100vw+8rem)]"
-            style={{ 
-              x: isIdle ? 'calc(-100vw + 8rem)' : 0, // This is technically inaccurate, let's fix it below
-            }}
-          >
-            {/* We wrap the whole thing in a motion.div that follows the button */}
-          </motion.div>
-        )}
-      </AnimatePresence>
 
       <motion.div
         variants={botVariants}
@@ -153,10 +143,11 @@ export default function FloatingBot({ onClick, isOpen }: FloatingBotProps) {
 
         <motion.button
           onClick={(e) => {
-            resetIdleTimer()
+            stopIdleTimer()
             onClick()
           }}
-          onMouseEnter={resetIdleTimer}
+          onMouseEnter={() => setIsHovering(true)}
+          onMouseLeave={() => setIsHovering(false)}
           whileHover={{ scale: 1.05 }}
           whileTap={{ scale: 0.95 }}
           className={`w-16 h-16 md:w-20 md:h-20 rounded-full flex items-center justify-center shadow-[0_0_30px_rgba(0,255,65,0.4)] border-accent/0 preserve-3d will-change-transform ${
