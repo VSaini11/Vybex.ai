@@ -7,6 +7,6 @@ export default function robots(): MetadataRoute.Robots {
             allow: '/',
             disallow: ['/api/', '/dashboard/'],
         },
-        sitemap: 'https://vybex.ai/sitemap.xml',
+        sitemap: 'https://vybexai.vercel.app/sitemap.xml',
     }
 }

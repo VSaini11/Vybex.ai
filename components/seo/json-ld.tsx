@@ -29,7 +29,8 @@ export default function JsonLd() {
         'publisher': {
             '@type': 'Organization',
             'name': 'Vybex AI',
-            'url': 'https://vybex.ai',
+            'url': 'https://vybexai.vercel.app/',
+            'logo': 'https://vybexai.vercel.app/icon.png',
         },
     }
 
