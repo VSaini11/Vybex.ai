@@ -138,12 +138,18 @@ export default function VyanaAssistant({ onTranscript, onGenerate }: VyanaAssist
                 if (!isManualStopRef.current && silenceTimeoutRef.current) {
                     console.log('Voice dropout detected, auto-restarting session...')
                     isAutoRestarting.current = true
-                    try {
-                        recognitionInstance.start()
-                        return
-                    } catch (e) {
-                        console.error("Failed to auto-restart recognition:", e)
-                    }
+                    
+                    // Add a small delay to prevent rapid-fire restart loops if the browser is glitching
+                    setTimeout(() => {
+                        try {
+                            if (recognitionRef.current && !isActuallyListening.current && !isManualStopRef.current) {
+                                recognitionRef.current.start()
+                            }
+                        } catch (e) {
+                            console.error("Failed to auto-restart recognition:", e)
+                        }
+                    }, 300)
+                    return
                 }
 
                 setIsListening(false)

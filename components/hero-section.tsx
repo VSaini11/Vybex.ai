@@ -1,7 +1,7 @@
 'use client'
 
 import { motion, AnimatePresence } from 'framer-motion'
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect, useCallback } from 'react'
 import { ArrowUp, ChevronDown, Paperclip, X, FileText, Image as ImageIcon } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import VyanaAssistant from './vyana-assistant'
@@ -49,7 +49,10 @@ export default function HeroSection({ onGenerate }: HeroSectionProps) {
   const remaining = MAX_CHARS - prompt.length
   const activeModel = MODEL_OPTIONS.find(m => m.id === selectedModel)!
 
-  const handleGenerate = () => {
+  const prevModelRef = useRef<Model>(selectedModel)
+
+
+  const handleGenerate = useCallback(() => {
     if (!prompt.trim() && !file) return
 
     if (selectedModel === 'vyana2') {
@@ -63,7 +66,7 @@ export default function HeroSection({ onGenerate }: HeroSectionProps) {
     } else {
       onGenerate?.(prompt)
     }
-  }
+  }, [prompt, file, selectedModel, router, onGenerate])
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFile = e.target.files?.[0]
@@ -87,6 +90,29 @@ export default function HeroSection({ onGenerate }: HeroSectionProps) {
       setDropdownOpen(false)
     }
   }
+
+  // Callback stability for VyanaAssistant
+  const handleTranscript = useCallback((text: string) => {
+    setPrompt(prev => {
+        const trimmedText = text.trim()
+        return (prev + (prev ? ' ' : '') + trimmedText).slice(0, MAX_CHARS)
+    })
+  }, [])
+
+  const handleAssistantGenerate = useCallback((text: string) => {
+    setPrompt(prev => {
+        const newPrompt = prev + (text ? (prev ? ' ' : '') + text : '')
+        // Use a microtask to handle navigation after state update
+        Promise.resolve().then(() => {
+            if (selectedModel === 'vyana2') {
+                router.push(`/workflow?goal=${encodeURIComponent(newPrompt.trim())}`)
+            } else {
+                onGenerate?.(newPrompt)
+            }
+        })
+        return newPrompt
+    })
+  }, [selectedModel, router, onGenerate])
 
   return (
     <section className="relative min-h-screen flex items-center justify-center px-4 pt-12 pb-24 overflow-hidden">
@@ -319,25 +345,8 @@ export default function HeroSection({ onGenerate }: HeroSectionProps) {
                 <div className="flex items-center gap-3 flex-1 sm:flex-initial">
                   <div className="hidden md:block">
                     <VyanaAssistant
-                      onTranscript={(text) => {
-                        setPrompt(prev => {
-                          const trimmedText = text.trim()
-                          return (prev + (prev ? ' ' : '') + trimmedText).slice(0, MAX_CHARS)
-                        })
-                      }}
-                      onGenerate={(text) => {
-                        setPrompt(prev => {
-                          const newPrompt = prev + (text ? (prev ? ' ' : '') + text : '')
-                          setTimeout(() => {
-                            if (selectedModel === 'vyana2') {
-                              router.push(`/workflow?goal=${encodeURIComponent(newPrompt.trim())}`)
-                            } else {
-                              onGenerate?.(newPrompt)
-                            }
-                          }, 0)
-                          return newPrompt
-                        })
-                      }}
+                      onTranscript={handleTranscript}
+                      onGenerate={handleAssistantGenerate}
                     />
                   </div>
                   <button
