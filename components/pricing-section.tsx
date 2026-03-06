@@ -87,7 +87,7 @@ export default function PricingSection() {
   const [hoveredCard, setHoveredCard] = useState<number | null>(null)
 
   return (
-    <section className="py-28 px-4 bg-background overflow-hidden">
+    <section id="pricing" className="py-28 px-4 bg-background overflow-hidden">
       <div className="max-w-5xl mx-auto">
 
         {/* Heading */}

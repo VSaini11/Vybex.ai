@@ -26,7 +26,7 @@ const LINKS = {
 
 export default function FinalCTA() {
   return (
-    <footer className="border-t border-border/40 bg-background">
+    <footer id="footer" className="border-t border-border/40 bg-background">
       {/* Main footer content */}
       <div className="max-w-6xl mx-auto px-6 py-16">
         <div className="grid grid-cols-1 lg:grid-cols-5 gap-12">
