@@ -5,7 +5,7 @@ export default function JsonLd() {
         '@context': 'https://schema.org',
         '@type': 'WebSite',
         'name': 'Vybex AI',
-        'alternateName': ['Vybex', 'Vybex AI Builder'],
+        'alternateName': ['Vybex', 'Vybex.ai', 'Vybex AI Builder'],
         'url': 'https://vybexai.vercel.app/',
     }
 
