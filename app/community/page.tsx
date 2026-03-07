@@ -28,7 +28,7 @@ export default function CommunityPage() {
                     <ul className="space-y-2 max-w-sm">
                         {[
                             { label: 'LinkedIn Page', icon: <Linkedin className="w-3.5 h-3.5" />, href: 'https://www.linkedin.com/company/vybex-studio' },
-                            { label: 'Email Support', icon: <Mail className="w-3.5 h-3.5" />, href: 'mailto:hello@vybex.ai' },
+                            { label: 'Email Support', icon: <Mail className="w-3.5 h-3.5" />, href: 'mailto:vybex.signal@gmail.com' },
                             { label: 'Discord Community', icon: <MessageSquare className="w-3.5 h-3.5" />, href: '#', note: '(Join early access)' },
                             { label: 'Twitter / X', icon: <Twitter className="w-3.5 h-3.5" />, href: '#' }
                         ].map((link, i) => (
@@ -60,10 +60,10 @@ export default function CommunityPage() {
                     <div className="flex items-center gap-2">
                         <span className="text-sm font-bold">Drop your idea at</span>
                         <a
-                            href="mailto:hello@vybex.ai"
+                            href="mailto:vybex.signal@gmail.com"
                             className="text-sm font-bold text-accent hover:underline flex items-center gap-1"
                         >
-                            hello@vybex.ai <ArrowRight className="w-3 h-3 rotate-[-45deg]" />
+                            vybex.signal@gmail.com <ArrowRight className="w-3 h-3 rotate-[-45deg]" />
                         </a>
                     </div>
                 </div>

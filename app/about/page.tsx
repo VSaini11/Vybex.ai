@@ -61,7 +61,7 @@ export default function AboutPage() {
       <Navbar />
 
       {/* Hero Section */}
-      <section className="relative pt-32 pb-20 px-4 overflow-hidden">
+      <section className="relative pt-32 pb-0 px-4 overflow-hidden">
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_var(--accent)_0%,_transparent_70%)] opacity-[0.03] pointer-events-none" />
         <div className="max-w-4xl mx-auto text-center relative z-10">
           <motion.div
@@ -81,107 +81,108 @@ export default function AboutPage() {
       </section>
 
       {/* Sticky Scroll Showcase */}
-      <section ref={containerRef} className="relative">
-        <div className="max-w-7xl mx-auto px-4">
-          <div className="flex flex-col md:flex-row gap-8 lg:gap-16 items-start">
+      <section ref={containerRef} className="relative md:block">
+        {/* Desktop: Locked Scroll Track */}
+        <div className="hidden md:block h-[300vh] bg-background">
+          <div className="sticky top-20 h-[calc(100vh-80px)] flex items-center justify-center overflow-visible">
+            <div className="max-w-7xl mx-auto px-4 w-full">
+              <div className="flex flex-row gap-8 lg:gap-16 items-center">
 
-            {/* Sticky Left: Image */}
-            <div className="hidden md:flex sticky top-0 w-full md:w-1/2 h-screen items-center justify-center py-12">
-              <div className="relative w-full aspect-square max-h-[70vh] group">
-                {/* Background glow that changes with the model */}
-                <AnimatePresence mode="wait">
-                  <motion.div
-                    key={`glow-${activeIndex}`}
-                    className="absolute -inset-10 rounded-[3rem] opacity-20 blur-3xl transition-opacity duration-1000"
-                    style={{ background: MODELS[activeIndex].accent }}
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 0.2 }}
-                    exit={{ opacity: 0 }}
-                    transition={{ duration: 1 }}
-                  />
-                </AnimatePresence>
+                {/* Left: Image */}
+                <div className="w-1/2 flex items-center justify-center">
+                  <div className="relative w-full aspect-square max-h-[70vh] group">
+                    <AnimatePresence mode="wait">
+                      <motion.div
+                        key={`glow-${activeIndex}`}
+                        className="absolute -inset-10 rounded-[3rem] opacity-20 blur-3xl transition-opacity duration-1000"
+                        style={{ background: MODELS[activeIndex].accent }}
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 0.2 }}
+                        exit={{ opacity: 0 }}
+                      />
+                    </AnimatePresence>
 
-                <div className="relative h-full rounded-2xl overflow-hidden border border-white/10 shadow-3xl bg-[#0a0a0a]">
+                    <div className="relative h-full rounded-2xl overflow-hidden border border-white/10 shadow-3xl bg-[#0a0a0a]">
+                      <AnimatePresence mode="wait">
+                        <motion.div
+                          key={activeIndex}
+                          initial={{ opacity: 0.2, scale: 1.05, filter: 'blur(10px)' }}
+                          animate={{ opacity: 1, scale: 1, filter: 'blur(0px)' }}
+                          exit={{ opacity: 0.2, scale: 0.98, filter: 'blur(8px)' }}
+                          transition={{ duration: 0.6 }}
+                          className="absolute inset-0"
+                        >
+                          <img
+                            src={MODELS[activeIndex].image}
+                            alt={MODELS[activeIndex].version}
+                            className="w-full h-full object-cover"
+                          />
+                          <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent" />
+                          <div className="absolute bottom-8 left-8">
+                            <span className="px-5 py-2 rounded-full text-sm font-bold tracking-widest uppercase bg-accent text-black shadow-[0_0_30px_rgba(0,255,65,0.4)]">
+                              {MODELS[activeIndex].version}
+                            </span>
+                          </div>
+                        </motion.div>
+                      </AnimatePresence>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Right: Info */}
+                <div className="w-1/2">
                   <AnimatePresence mode="wait">
                     <motion.div
                       key={activeIndex}
-                      initial={{ opacity: 0.2, scale: 1.05, filter: 'blur(10px)' }}
-                      animate={{ opacity: 1, scale: 1, filter: 'blur(0px)' }}
-                      exit={{ opacity: 0.2, scale: 0.98, filter: 'blur(8px)' }}
-                      transition={{ duration: 0.6, ease: [0.4, 0, 0.2, 1] }}
-                      className="absolute inset-0"
+                      initial={{ opacity: 0, x: 20, filter: 'blur(10px)' }}
+                      animate={{ opacity: 1, x: 0, filter: 'blur(0px)' }}
+                      exit={{ opacity: 0, x: -20, filter: 'blur(10px)' }}
+                      transition={{ duration: 0.5 }}
+                      className="space-y-6"
                     >
-                      <img
-                        src={MODELS[activeIndex].image}
-                        alt={MODELS[activeIndex].version}
-                        className="w-full h-full object-cover"
-                      />
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent" />
-
-                      <div className="absolute bottom-8 left-8">
-                        <motion.span
-                          initial={{ y: 20, opacity: 0 }}
-                          animate={{ y: 0, opacity: 1 }}
-                          transition={{ delay: 0.2 }}
-                          className="px-5 py-2 rounded-full text-sm font-bold tracking-widest uppercase bg-accent text-black shadow-[0_0_30px_rgba(0,255,65,0.4)]"
-                        >
-                          {MODELS[activeIndex].version}
-                        </motion.span>
+                      <h2 className="text-4xl md:text-6xl font-bold tracking-tight">
+                        {MODELS[activeIndex].title}
+                      </h2>
+                      <p className="text-lg md:text-xl text-muted-foreground leading-relaxed max-w-xl">
+                        {MODELS[activeIndex].description}
+                      </p>
+                      <div className="flex flex-wrap gap-3 pt-4">
+                        {MODELS[activeIndex].features.map(feature => (
+                          <span key={feature} className="px-4 py-2 rounded-xl text-sm border border-white/5 bg-white/[0.03] text-foreground/80">
+                            {feature}
+                          </span>
+                        ))}
                       </div>
                     </motion.div>
                   </AnimatePresence>
                 </div>
               </div>
             </div>
-
-            {/* Scrollable Right: Info */}
-            <div className="w-full md:w-1/2">
-              {MODELS.map((model, index) => (
-                <motion.div
-                  key={model.version}
-                  initial={{ opacity: 0.2 }}
-                  whileInView={{ opacity: 1 }}
-                  viewport={{ margin: "-30% 0px -30% 0px", once: false }}
-                  transition={{ duration: 0.5 }}
-                  className="flex flex-col justify-center min-h-[60vh] md:min-h-screen py-12 md:py-20"
-                >
-                  {/* Mobile Image (only visible on mobile) */}
-                  <div className="md:hidden mb-12 relative aspect-square rounded-2xl overflow-hidden border border-white/10 shadow-2xl">
-                    <img src={model.image} alt={model.version} className="w-full h-full object-cover" />
-                    <div className="absolute bottom-4 left-4 font-bold text-accent bg-black/60 px-3 py-1 rounded-lg">
-                      {model.version}
-                    </div>
-                  </div>
-
-                  <div className="space-y-6">
-                    <h2 className="text-4xl md:text-6xl font-bold tracking-tight">
-                      {model.title}
-                    </h2>
-                    <p className="text-lg md:text-xl text-muted-foreground leading-relaxed max-w-xl">
-                      {model.description}
-                    </p>
-
-                    <div className="flex flex-wrap gap-3 pt-4">
-                      {model.features.map(feature => (
-                        <span
-                          key={feature}
-                          className="px-4 py-2 rounded-xl text-sm border border-white/5 bg-white/[0.03] text-foreground/80 hover:bg-white/[0.08] transition-colors"
-                        >
-                          {feature}
-                        </span>
-                      ))}
-                    </div>
-                  </div>
-                </motion.div>
-              ))}
-            </div>
           </div>
+        </div>
+
+        {/* Mobile: Sequential Scroll */}
+        <div className="md:hidden space-y-24 py-12 px-4">
+          {MODELS.map((model) => (
+            <div key={model.version} className="space-y-8">
+              <div className="relative aspect-square rounded-2xl overflow-hidden border border-white/10">
+                <img src={model.image} alt={model.version} className="w-full h-full object-cover" />
+                <div className="absolute bottom-4 left-4 font-bold text-accent bg-black/60 px-3 py-1 rounded-lg">
+                  {model.version}
+                </div>
+              </div>
+              <div className="space-y-4">
+                <h2 className="text-4xl font-bold tracking-tight">{model.title}</h2>
+                <p className="text-lg text-muted-foreground leading-relaxed">{model.description}</p>
+              </div>
+            </div>
+          ))}
         </div>
       </section>
 
       <VybeteraSection />
 
-      <div className="mt-32">
+      <div className="mt-12">
         <FinalCTA />
       </div>
     </main>

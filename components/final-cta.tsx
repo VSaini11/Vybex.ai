@@ -10,7 +10,6 @@ const LINKS = {
   COMPANY: [
     { label: 'About', href: '#' },
     { label: 'Join Us', href: '/join-us' },
-    { label: 'Contact', href: '#' },
   ],
   RESOURCES: [
     { label: 'Documentation', href: '/docs' },
@@ -61,9 +60,6 @@ export default function FinalCTA() {
               >
                 Get Started
               </button>
-              <button className="px-5 py-2.5 rounded-lg border border-border text-muted-foreground text-sm font-semibold hover:border-accent/40 hover:text-foreground transition-all duration-200 text-left">
-                Contact Us
-              </button>
             </div>
           </motion.div>
 
@@ -111,7 +107,7 @@ export default function FinalCTA() {
               <p className="text-sm text-muted-foreground">
                 Want to build the future of AI-powered products?
                 <span className="block md:inline ml-0 md:ml-1">
-                  Drop your portfolio at <a href="mailto:hello@vybex.ai" className="text-accent hover:underline">hello@vybex.ai</a> ↗
+                  Drop your portfolio at <a href="mailto:vybex.signal@gmail.com" className="text-accent hover:underline">vybex.signal@gmail.com</a> ↗
                 </span>
               </p>
             </div>

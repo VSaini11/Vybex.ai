@@ -39,16 +39,16 @@ export default function Navbar() {
                 transition={{ duration: 0.5, ease: 'easeOut' }}
             >
                 <nav
-                    className="max-w-5xl mx-auto flex items-center justify-between px-5 py-3 rounded-2xl transition-all duration-300"
+                    className="max-w-5xl mx-auto flex items-center justify-between px-7 py-3 rounded-full transition-all duration-300"
                     style={{
                         background: scrolled
                             ? 'rgba(10,10,10,0.85)'
-                            : 'rgba(10,10,10,0.5)',
-                        backdropFilter: 'blur(16px)',
-                        WebkitBackdropFilter: 'blur(16px)',
+                            : 'transparent',
+                        backdropFilter: scrolled ? 'blur(16px)' : 'none',
+                        WebkitBackdropFilter: scrolled ? 'blur(16px)' : 'none',
                         border: scrolled
                             ? '1px solid rgba(255,255,255,0.08)'
-                            : '1px solid rgba(255,255,255,0.04)',
+                            : '1px solid transparent',
                         boxShadow: scrolled ? '0 8px 40px rgba(0,0,0,0.4)' : 'none',
                     }}
                 >
@@ -73,7 +73,7 @@ export default function Navbar() {
                             <a
                                 key={link.label}
                                 href={link.href}
-                                className="px-4 py-2 rounded-xl text-sm text-muted-foreground hover:text-foreground hover:bg-white/5 transition-all duration-150"
+                                className="px-5 py-2 rounded-full text-sm text-muted-foreground hover:text-foreground hover:bg-white/5 transition-all duration-150"
                             >
                                 {link.label}
                             </a>
@@ -85,7 +85,7 @@ export default function Navbar() {
                         {user ? (
                             <a
                                 href="/dashboard"
-                                className="px-4 py-2 rounded-xl text-sm font-semibold text-background transition-all duration-200 hover:scale-105 flex items-center gap-2"
+                                className="px-5 py-2 rounded-full text-sm font-semibold text-background transition-all duration-200 hover:scale-105 flex items-center gap-2"
                                 style={{ background: '#00ff41', boxShadow: '0 0 18px rgba(0,255,65,0.25)' }}
                             >
                                 Dashboard
@@ -100,7 +100,7 @@ export default function Navbar() {
                                 </a>
                                 <a
                                     href="/signup"
-                                    className="px-4 py-2 rounded-xl text-sm font-semibold text-background transition-all duration-200 hover:scale-105"
+                                    className="px-5 py-2 rounded-full text-sm font-semibold text-background transition-all duration-200 hover:scale-105"
                                     style={{ background: '#00ff41', boxShadow: '0 0 18px rgba(0,255,65,0.25)' }}
                                 >
                                     Get Started
@@ -123,7 +123,7 @@ export default function Navbar() {
                 <AnimatePresence>
                     {mobileOpen && (
                         <motion.div
-                            className="md:hidden max-w-5xl mx-auto mt-2 rounded-2xl overflow-hidden"
+                            className="md:hidden max-w-5xl mx-auto mt-2 rounded-[2rem] overflow-hidden"
                             initial={{ opacity: 0, y: -8, scaleY: 0.95 }}
                             animate={{ opacity: 1, y: 0, scaleY: 1 }}
                             exit={{ opacity: 0, y: -8, scaleY: 0.95 }}
@@ -139,7 +139,7 @@ export default function Navbar() {
                                     <a
                                         key={link.label}
                                         href={link.href}
-                                        className="px-4 py-3 rounded-xl text-sm text-muted-foreground hover:text-foreground hover:bg-white/5 transition-all"
+                                        className="px-5 py-3 rounded-full text-sm text-muted-foreground hover:text-foreground hover:bg-white/5 transition-all"
                                         onClick={() => setMobileOpen(false)}
                                     >
                                         {link.label}
@@ -149,7 +149,7 @@ export default function Navbar() {
                                 {user ? (
                                     <a
                                         href="/dashboard"
-                                        className="mt-1 px-4 py-3 rounded-xl text-sm font-semibold text-background text-center transition-all"
+                                        className="mt-1 px-5 py-3 rounded-full text-sm font-semibold text-background text-center transition-all"
                                         style={{ background: '#00ff41' }}
                                         onClick={() => setMobileOpen(false)}
                                     >
@@ -159,14 +159,14 @@ export default function Navbar() {
                                     <>
                                         <a
                                             href="/login"
-                                            className="px-4 py-3 rounded-xl text-sm text-muted-foreground hover:text-foreground hover:bg-white/5 transition-all"
+                                            className="px-5 py-3 rounded-full text-sm text-muted-foreground hover:text-foreground hover:bg-white/5 transition-all"
                                             onClick={() => setMobileOpen(false)}
                                         >
                                             Sign in
                                         </a>
                                         <a
                                             href="/signup"
-                                            className="mt-1 px-4 py-3 rounded-xl text-sm font-semibold text-background text-center transition-all"
+                                            className="mt-1 px-5 py-3 rounded-full text-sm font-semibold text-background text-center transition-all"
                                             style={{ background: '#00ff41' }}
                                             onClick={() => setMobileOpen(false)}
                                         >

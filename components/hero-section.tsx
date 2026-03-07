@@ -94,55 +94,54 @@ export default function HeroSection({ onGenerate }: HeroSectionProps) {
   // Callback stability for VyanaAssistant
   const handleTranscript = useCallback((text: string) => {
     setPrompt(prev => {
-        const trimmedText = text.trim()
-        return (prev + (prev ? ' ' : '') + trimmedText).slice(0, MAX_CHARS)
+      const trimmedText = text.trim()
+      return (prev + (prev ? ' ' : '') + trimmedText).slice(0, MAX_CHARS)
     })
   }, [])
 
   const handleAssistantGenerate = useCallback((text: string) => {
     setPrompt(prev => {
-        const newPrompt = prev + (text ? (prev ? ' ' : '') + text : '')
-        // Use a microtask to handle navigation after state update
-        Promise.resolve().then(() => {
-            if (selectedModel === 'vyana2') {
-                router.push(`/workflow?goal=${encodeURIComponent(newPrompt.trim())}`)
-            } else {
-                onGenerate?.(newPrompt)
-            }
-        })
-        return newPrompt
+      const newPrompt = prev + (text ? (prev ? ' ' : '') + text : '')
+      // Use a microtask to handle navigation after state update
+      Promise.resolve().then(() => {
+        if (selectedModel === 'vyana2') {
+          router.push(`/workflow?goal=${encodeURIComponent(newPrompt.trim())}`)
+        } else {
+          onGenerate?.(newPrompt)
+        }
+      })
+      return newPrompt
     })
   }, [selectedModel, router, onGenerate])
 
   return (
-    <section className="relative min-h-screen flex items-center justify-center px-4 pt-12 pb-24 overflow-hidden">
-      {/* Subtle background glows */}
-      <div className="absolute inset-0 pointer-events-none overflow-hidden">
-        <div className="absolute -top-40 left-1/4 w-[600px] h-[600px] bg-accent/5 rounded-full blur-[120px]" />
-        <div className="absolute bottom-0 right-1/4 w-[500px] h-[500px] bg-accent/4 rounded-full blur-[100px]" />
+    <section className="relative min-h-screen flex items-center justify-center px-4 pt-12 pb-24 overflow-visible">
+      {/* Enhanced Mesh Gradient Background */}
+      <div className="absolute inset-0 pointer-events-none">
+        {/* Primary Green Glow */}
+        <motion.div
+          initial={{ opacity: 0.15, scale: 1 }}
+          animate={{
+            opacity: [0.15, 0.25, 0.15]
+          }}
+          transition={{ duration: 10, repeat: Infinity, ease: "easeInOut" }}
+          className="absolute -top-[20%] -left-[15%] w-[60%] h-[60%] bg-accent/35 rounded-full blur-[140px]"
+        />
+        {/* Bottom Green Accent */}
+        <motion.div
+          initial={{ opacity: 0.08, x: 0 }}
+          animate={{
+            x: [0, -40, 0],
+            opacity: [0.08, 0.12, 0.08]
+          }}
+          transition={{ duration: 12, repeat: Infinity, ease: "easeInOut" }}
+          className="absolute -bottom-[15%] right-[5%] w-[40%] h-[40%] bg-accent/10 rounded-full blur-[130px]"
+        />
       </div>
 
-      {/* Floating particles */}
-      <div className="absolute inset-0 pointer-events-none overflow-hidden">
-        {[
-          { x1: -80, y1: 60, x2: 120, y2: -140 },
-          { x1: 150, y1: -90, x2: -60, y2: 180 },
-          { x1: -170, y1: -50, x2: 90, y2: 70 },
-          { x1: 40, y1: 190, x2: -130, y2: -80 },
-          { x1: -100, y1: 130, x2: 160, y2: -30 },
-        ].map((pos, i) => (
-          <motion.div
-            key={i}
-            className="absolute w-1 h-1 bg-accent rounded-full opacity-40"
-            initial={{ x: pos.x1, y: pos.y1 }}
-            animate={{ x: pos.x2, y: pos.y2, opacity: [0.4, 0.1, 0.4] }}
-            transition={{ duration: 5 + i, repeat: Infinity, ease: 'easeInOut' }}
-            style={{ top: '40%', left: '50%' }}
-          />
-        ))}
-      </div>
 
-      <div className="relative z-10 max-w-3xl mx-auto w-full text-center">
+
+      <div className="relative z-10 max-w-3xl mx-auto w-full text-center -mt-12 md:-mt-24">
 
         {/* Heading */}
         <motion.div
@@ -151,10 +150,10 @@ export default function HeroSection({ onGenerate }: HeroSectionProps) {
           transition={{ duration: 0.7 }}
         >
           <h1 className="font-bold leading-[1.1] tracking-tight mb-6">
-            <span className="block text-accent text-5xl md:text-7xl">
+            <span className="block text-accent text-4xl md:text-6xl">
               Think it
             </span>
-            <span className="block text-foreground text-4xl md:text-6xl mt-2">
+            <span className="block text-foreground text-2xl md:text-4xl mt-2">
               Vyana Builds it.
             </span>
           </h1>
@@ -168,16 +167,16 @@ export default function HeroSection({ onGenerate }: HeroSectionProps) {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.7, delay: 0.3 }}
         >
-          <div className="relative rounded-2xl border border-border bg-card/70 backdrop-blur-md shadow-2xl overflow-hidden"
+          <div className="relative rounded-[2.5rem] border border-border bg-card/70 backdrop-blur-md shadow-2xl overflow-visible"
             style={{ boxShadow: '0 0 60px rgba(0,255,65,0.06), 0 25px 50px rgba(0,0,0,0.5)' }}
           >
             {/* Model selector top bar */}
-            <div className="flex items-center gap-2 px-5 pt-4 pb-3 border-b border-border/40">
-              <span className="text-xs text-muted-foreground font-medium">Model:</span>
+            <div className="flex items-center gap-2 px-10 py-1.5 border-b border-border/20 rounded-t-[2.45rem]">
+              <span className="text-[10px] text-muted-foreground font-medium">Model:</span>
               <div ref={dropdownRef} className="relative" onBlur={handleBlur}>
                 <button
                   onClick={() => setDropdownOpen(o => !o)}
-                  className="flex items-center gap-2 px-3 py-1.5 rounded-lg border border-border bg-background/60 hover:border-accent/40 transition-colors text-sm font-medium text-foreground"
+                  className="flex items-center gap-2 px-3 py-1.5 rounded-full border border-border bg-background/60 hover:border-accent/40 transition-colors text-xs font-medium text-foreground"
                 >
                   <span
                     className="text-[10px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded"
@@ -190,7 +189,7 @@ export default function HeroSection({ onGenerate }: HeroSectionProps) {
                   </span>
                   {activeModel.label}
                   <ChevronDown
-                    className="w-3.5 h-3.5 text-muted-foreground transition-transform duration-200"
+                    className="w-3 h-3 text-muted-foreground transition-transform duration-200"
                     style={{ transform: dropdownOpen ? 'rotate(180deg)' : 'rotate(0deg)' }}
                   />
                 </button>
@@ -202,7 +201,7 @@ export default function HeroSection({ onGenerate }: HeroSectionProps) {
                       animate={{ opacity: 1, y: 0, scale: 1 }}
                       exit={{ opacity: 0, y: -6, scale: 0.97 }}
                       transition={{ duration: 0.15 }}
-                      className="absolute top-full left-0 mt-2 w-64 rounded-xl border border-border bg-card backdrop-blur-xl shadow-2xl overflow-hidden z-50"
+                      className="absolute top-full left-0 mt-2 w-64 rounded-[2rem] border border-border bg-card backdrop-blur-xl shadow-2xl overflow-hidden z-50"
                       style={{ boxShadow: '0 20px 60px rgba(0,0,0,0.6), 0 0 0 1px rgba(255,255,255,0.04)' }}
                     >
                       {MODEL_OPTIONS.map((option) => (
@@ -266,7 +265,7 @@ export default function HeroSection({ onGenerate }: HeroSectionProps) {
                   exit={{ opacity: 0, height: 0 }}
                   className="px-6 pt-3"
                 >
-                  <div className="flex items-center gap-3 p-2 rounded-xl bg-accent/5 border border-accent/20 w-fit">
+                  <div className="flex items-center gap-3 p-2 rounded-full bg-accent/5 border border-accent/20 w-fit">
                     {file.mimeType.startsWith('image/') ? (
                       <ImageIcon className="w-4 h-4 text-accent" />
                     ) : (
@@ -296,7 +295,7 @@ export default function HeroSection({ onGenerate }: HeroSectionProps) {
                     ? 'What should I do with this file? E.g. summarize it, extract info, what color is the sky in this image?'
                     : 'Describe your startup, the problem you solve, your target audience, and key features…'
               }
-              className="w-full bg-transparent text-foreground placeholder:text-muted-foreground/50 resize-none outline-none px-6 pt-5 pb-4 text-base leading-relaxed min-h-[140px] md:min-h-[120px]"
+              className="w-full bg-transparent text-foreground placeholder:text-muted-foreground/50 resize-none outline-none px-10 py-1.5 text-sm leading-relaxed min-h-[48px]"
               rows={4}
               onKeyDown={e => {
                 if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) {
@@ -307,13 +306,13 @@ export default function HeroSection({ onGenerate }: HeroSectionProps) {
             />
 
             {/* Bottom bar */}
-            <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4 px-6 py-4 border-t border-border/60">
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4 px-10 py-1.5 border-t border-border/20 rounded-b-[2.45rem]">
               {/* Language badge */}
               <div className="flex items-center justify-between sm:justify-start gap-2">
-                <span className="text-xs text-muted-foreground font-medium">Language:</span>
-                <div className="flex items-center gap-1.5 border border-border bg-background/60 rounded-lg px-3 py-1.5 text-sm text-foreground cursor-pointer hover:border-accent/40 transition-colors">
+                <span className="text-[10px] text-muted-foreground font-medium">Language:</span>
+                <div className="flex items-center gap-1.5 border border-border bg-background/60 rounded-full px-3 py-1.5 text-xs text-foreground cursor-pointer hover:border-accent/40 transition-colors">
                   English
-                  <svg width="12" height="12" viewBox="0 0 12 12" fill="none" className="text-muted-foreground ml-0.5">
+                  <svg width="10" height="10" viewBox="0 0 12 12" fill="none" className="text-muted-foreground ml-0.5">
                     <path d="M2 4l4 4 4-4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
                   </svg>
                 </div>
@@ -332,14 +331,14 @@ export default function HeroSection({ onGenerate }: HeroSectionProps) {
                     />
                     <button
                       onClick={() => fileInputRef.current?.click()}
-                      className="p-2 rounded-xl border border-border bg-background/60 hover:border-accent/40 transition-colors text-muted-foreground hover:text-foreground"
+                      className="p-1.5 rounded-full border border-border bg-background/60 hover:border-accent/40 transition-colors text-muted-foreground hover:text-foreground"
                       title="Attach File"
                     >
-                      <Paperclip className="w-4 h-4" />
+                      <Paperclip className="w-3.5 h-3.5" />
                     </button>
                   </>
                 )}
-                <span className="text-xs text-muted-foreground tabular-nums">
+                <span className="text-[10px] text-muted-foreground tabular-nums">
                   {prompt.length}/{MAX_CHARS}
                 </span>
                 <div className="flex items-center gap-3 flex-1 sm:flex-initial">
@@ -352,11 +351,11 @@ export default function HeroSection({ onGenerate }: HeroSectionProps) {
                   <button
                     onClick={handleGenerate}
                     disabled={!prompt.trim() && !file}
-                    className="flex items-center justify-center gap-2 px-6 py-2.5 rounded-xl bg-accent text-background font-semibold text-sm hover:bg-accent/90 transition-all duration-200 hover:scale-105 active:scale-95 shadow-lg flex-1 sm:flex-initial disabled:opacity-40 disabled:cursor-not-allowed disabled:scale-100"
+                    className="flex items-center justify-center gap-2 px-6 py-2.5 rounded-full bg-accent text-background font-semibold text-xs hover:bg-accent/90 transition-all duration-200 hover:scale-105 active:scale-95 shadow-lg flex-1 sm:flex-initial disabled:opacity-40 disabled:cursor-not-allowed disabled:scale-100"
                     style={{ boxShadow: '0 0 20px rgba(0,255,65,0.3)' }}
                   >
                     {selectedModel === 'vyana2' ? 'Design Workflow' : selectedModel === 'vyana3' ? 'Extract Info' : 'Generate Now'}
-                    <ArrowUp className="w-4 h-4" />
+                    <ArrowUp className="w-3.5 h-3.5" />
                   </button>
                 </div>
               </div>

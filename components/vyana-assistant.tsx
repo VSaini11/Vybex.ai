@@ -283,16 +283,16 @@ export default function VyanaAssistant({ onTranscript, onGenerate }: VyanaAssist
 
                 <button
                     onClick={toggleListening}
-                    className={`relative z-10 flex items-center justify-center w-10 h-10 rounded-full transition-all duration-300 ${isListening
+                    className={`relative z-10 flex items-center justify-center w-8 h-8 rounded-full transition-all duration-300 ${isListening
                         ? 'bg-accent text-background shadow-[0_0_20px_rgba(0,255,65,0.5)]'
                         : 'bg-card border border-border hover:border-accent/50 text-foreground'
                         }`}
                     title={isListening ? "Stop listening" : "Talk to Vyana"}
                 >
                     {isListening ? (
-                        <Mic className="w-5 h-5 animate-pulse" />
+                        <Mic className="w-4 h-4 animate-pulse" />
                     ) : (
-                        <MicOff className="w-5 h-5 opacity-60" />
+                        <MicOff className="w-4 h-4 opacity-60" />
                     )}
                 </button>
             </div>

@@ -33,7 +33,7 @@ export default function JoinUsPage() {
                         </p>
 
                         <motion.a
-                            href="mailto:hello@vybex.ai"
+                            href="mailto:vybex.signal@gmail.com"
                             className="inline-flex items-center gap-2 px-8 py-4 rounded-full bg-white text-black font-bold text-lg hover:bg-white/90 transition-all duration-200 hover:scale-105"
                             whileHover={{ gap: '12px' }}
                         >
@@ -55,10 +55,10 @@ export default function JoinUsPage() {
                                 We are always looking for talented designers, developers, and AI researchers who want to do the best work of their lives.
                             </p>
                             <a
-                                href="mailto:hello@vybex.ai"
+                                href="mailto:vybex.signal@gmail.com"
                                 className="text-2xl font-bold text-foreground hover:text-accent transition-colors"
                             >
-                                hello@vybex.ai ↗
+                                vybex.signal@gmail.com ↗
                             </a>
                         </div>
                     </div>

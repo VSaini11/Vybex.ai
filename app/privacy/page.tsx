@@ -92,7 +92,7 @@ export default function PrivacyPage() {
                         <li>Request access to your stored data</li>
                         <li>Cancel your subscription anytime</li>
                     </ul>
-                    <p className="font-bold text-foreground">Contact: hello@vybex.ai</p>
+                    <p className="font-bold text-foreground">Contact: vybex.signal@gmail.com</p>
                 </div>
             )
         },
