@@ -4,6 +4,7 @@ import React, { useRef, useState, useEffect } from 'react'
 import { motion, AnimatePresence, useScroll } from 'framer-motion'
 import Navbar from '@/components/navbar'
 import FinalCTA from '@/components/final-cta'
+import VybeteraSection from '@/components/about/vybetera-section'
 
 const MODELS = [
   {
@@ -177,6 +178,8 @@ export default function AboutPage() {
           </div>
         </div>
       </section>
+
+      <VybeteraSection />
 
       <div className="mt-32">
         <FinalCTA />
