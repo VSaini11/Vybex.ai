@@ -6,7 +6,8 @@ import { Button } from '@/components/ui/button';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { toast } from 'sonner';
-import { Zap, Shield, Crown, LogOut, Loader2, ArrowRight, Check } from 'lucide-react';
+import { Zap, Shield, Crown, LogOut, Loader2, ArrowRight, Check, Gift, Sparkles } from 'lucide-react';
+
 import { motion } from 'framer-motion';
 
 declare global {
@@ -20,6 +21,9 @@ export default function DashboardPage() {
     const [loading, setLoading] = useState(true);
     const [upgrading, setUpgrading] = useState<string | null>(null);
     const [checkoutLoading, setCheckoutLoading] = useState(false);
+    const [vipCode, setVipCode] = useState('');
+    const [vipLoading, setVipLoading] = useState(false);
+
     const router = useRouter();
 
     useEffect(() => {
@@ -47,6 +51,34 @@ export default function DashboardPage() {
         router.push('/login');
         router.refresh();
     };
+
+    const handleVipRedeem = async () => {
+        if (!vipCode.trim()) {
+            toast.error('Please enter your coupon code');
+            return;
+        }
+        setVipLoading(true);
+        try {
+            const res = await fetch('/api/vip/redeem', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ code: vipCode.trim() }),
+            });
+            const data = await res.json();
+            if (!res.ok) throw new Error(data.error || 'Redemption failed');
+            toast.success(data.message || '🎉 VIP Pass activated!');
+            // Refresh user data
+            const meRes = await fetch('/api/auth/me');
+            const meData = await meRes.json();
+            if (meRes.ok) setUser(meData.user);
+            setVipCode('');
+        } catch (err: any) {
+            toast.error(err.message);
+        } finally {
+            setVipLoading(false);
+        }
+    };
+
 
     const loadRazorpay = () => {
         return new Promise((resolve) => {
@@ -148,6 +180,56 @@ export default function DashboardPage() {
                     </div>
                 </div>
 
+                {/* VIP Pass Section */}
+                <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="mb-8">
+                    {user.hasVipPass ? (
+                        <div className="relative overflow-hidden rounded-2xl border border-yellow-500/30 bg-gradient-to-r from-yellow-500/10 via-amber-500/5 to-yellow-500/10 p-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                            <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,rgba(234,179,8,0.08),transparent_60%)] pointer-events-none" />
+                            <div className="flex items-center gap-4">
+                                <div className="h-12 w-12 rounded-2xl bg-yellow-500/20 border border-yellow-500/30 flex items-center justify-center flex-shrink-0">
+                                    <Crown className="h-6 w-6 text-yellow-400" />
+                                </div>
+                                <div>
+                                    <p className="text-[10px] font-black uppercase tracking-[0.3em] text-yellow-500/80 mb-0.5">Giveaway Winner</p>
+                                    <h3 className="text-xl font-black text-yellow-300 tracking-tight">VIP PASS — ACTIVE</h3>
+                                    <p className="text-[11px] text-yellow-500/60 font-bold mt-0.5">Unlimited token generation · No plan required</p>
+                                </div>
+                            </div>
+                            <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-yellow-500/10 border border-yellow-500/20">
+                                <span className="h-2 w-2 rounded-full bg-yellow-400 animate-pulse" />
+                                <span className="text-xs font-black uppercase tracking-widest text-yellow-400">UNLIMITED</span>
+                            </div>
+                        </div>
+                    ) : (
+                        <div className="rounded-2xl border border-white/5 bg-zinc-900/40 p-6">
+                            <div className="flex items-center gap-3 mb-4">
+                                <Gift className="h-5 w-5 text-yellow-400" />
+                                <h3 className="text-sm font-black uppercase tracking-[0.25em] text-white">GIVEAWAY — REDEEM VIP PASS</h3>
+                            </div>
+                            <p className="text-xs text-zinc-400 font-medium mb-4 leading-relaxed">
+                                Won our giveaway? Enter your coupon code below to activate your <span className="text-yellow-400 font-bold">VIP Pass</span> — unlimited access, no plan needed.
+                            </p>
+                            <div className="flex gap-3 flex-col sm:flex-row">
+                                <input
+                                    type="text"
+                                    value={vipCode}
+                                    onChange={(e) => setVipCode(e.target.value.toUpperCase())}
+                                    onKeyDown={(e) => e.key === 'Enter' && handleVipRedeem()}
+                                    placeholder="ENTER COUPON CODE"
+                                    className="flex-1 h-12 px-4 bg-black/50 border border-white/10 rounded-xl text-white placeholder:text-zinc-600 text-sm font-mono font-bold uppercase tracking-widest focus:outline-none focus:border-yellow-500/50 transition-colors"
+                                />
+                                <Button
+                                    onClick={handleVipRedeem}
+                                    disabled={vipLoading}
+                                    className="h-12 px-6 bg-yellow-500 hover:bg-yellow-400 text-black font-black text-xs uppercase tracking-widest transition-all flex-shrink-0"
+                                >
+                                    {vipLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <><Sparkles className="h-4 w-4 mr-2" />REDEEM</>}
+                                </Button>
+                            </div>
+                        </div>
+                    )}
+                </motion.div>
+
                 {/* Top Section: Active Plan Horizontal Bar */}
                 <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="mb-10 md:mb-12">
                     <Card className="border-white/5 bg-zinc-900/40 backdrop-blur-3xl shadow-2xl overflow-hidden">
@@ -158,10 +240,18 @@ export default function DashboardPage() {
                                     <p className="text-[9px] md:text-[10px] font-black uppercase tracking-[0.3em] text-zinc-500 mb-2">Active Power Level</p>
                                     <div className="flex items-center gap-3">
                                         <h2 className="text-3xl md:text-4xl font-black tracking-tighter capitalize text-white leading-none">
-                                            {user.plan === 'none' ? 'No Plan' : (user.plan === 'free' ? 'Starter' : user.plan.replace('_', ' '))}
+                                            {user.hasVipPass ? 'VIP Pass' : (user.plan === 'none' ? 'No Plan' : (user.plan === 'free' ? 'Starter' : user.plan.replace('_', ' ')))}
                                         </h2>
-                                        <span className={`flex items-center gap-1.5 font-black text-[9px] md:text-[10px] px-2.5 py-1 rounded-full border ${user.plan === 'none' ? 'text-zinc-500 bg-zinc-500/10 border-zinc-500/20' : 'text-green-400 bg-green-400/10 border-green-400/20'}`}>
-                                            <span className={`h-1.5 w-1.5 rounded-full ${user.plan === 'none' ? 'bg-zinc-500' : 'bg-green-400 animate-pulse'}`} /> {user.plan === 'none' ? 'INACTIVE' : 'ACTIVE'}
+                                        <span className={`flex items-center gap-1.5 font-black text-[9px] md:text-[10px] px-2.5 py-1 rounded-full border ${
+                                            user.hasVipPass ? 'text-yellow-400 bg-yellow-400/10 border-yellow-400/20' :
+                                            user.plan === 'none' ? 'text-zinc-500 bg-zinc-500/10 border-zinc-500/20' :
+                                            'text-green-400 bg-green-400/10 border-green-400/20'
+                                        }`}>
+                                            <span className={`h-1.5 w-1.5 rounded-full ${
+                                                user.hasVipPass ? 'bg-yellow-400 animate-pulse' :
+                                                user.plan === 'none' ? 'bg-zinc-500' : 'bg-green-400 animate-pulse'
+                                            }`} />
+                                            {user.hasVipPass ? 'VIP' : user.plan === 'none' ? 'INACTIVE' : 'ACTIVE'}
                                         </span>
                                     </div>
                                 </div>
@@ -245,13 +335,16 @@ export default function DashboardPage() {
                     ))}
                 </div>
 
-                {/* Section Header for Upgrade */}
+                {/* Section Header for Upgrade — hidden for VIP users */}
+                {!user.hasVipPass && (
                 <div className="flex items-center gap-4 mb-6 md:mb-8">
                     <h2 className="text-sm md:text-lg font-black text-white uppercase tracking-[0.3em]">AVAILABLE UPGRADES</h2>
                     <div className="h-px flex-1 bg-white/5" />
                 </div>
+                )}
 
-                {/* SIDE-BY-SIDE PRICING GRID */}
+                {/* SIDE-BY-SIDE PRICING GRID — hidden for VIP users */}
+                {!user.hasVipPass && (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8 items-stretch">
 
                     {/* Starter Plan Card */}
@@ -388,6 +481,17 @@ export default function DashboardPage() {
                     )}
 
                 </div>
+                )}
+
+                {/* VIP max-out message */}
+                {user.hasVipPass && (
+                    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="mt-4">
+                        <div className="bg-yellow-500/5 border border-yellow-500/10 rounded-2xl p-6 text-center text-yellow-500/60 text-xs font-bold uppercase tracking-widest">
+                            VIP Pass Active — Unlimited generations enabled. No plan purchase required.
+                        </div>
+                    </motion.div>
+                )}
+
             </div>
         </div>
     );

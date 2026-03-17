@@ -303,12 +303,13 @@ export async function POST(req: NextRequest) {
     const user = await User.findById(decoded.userId)
     if (!user) return NextResponse.json({ error: 'User not found' }, { status: 404 })
 
-    if (user.plan === 'none') {
+    if (user.plan === 'none' && !user.hasVipPass) {
       return NextResponse.json({
         error: 'No active plan. Please subscribe to the Starter plan to generate pages.',
         showUpgrade: true,
       }, { status: 403 })
     }
+
 
     if (user.isSuspended) {
       return NextResponse.json({ error: 'Your account has been suspended.' }, { status: 403 })
@@ -344,6 +345,7 @@ export async function POST(req: NextRequest) {
       free: { generations: 20, dailyLimit: 20, tokens: 16384 },
       pro: { generations: 100, dailyLimit: 100, tokens: 32768 },
       pro_plus: { generations: 300, dailyLimit: 300, tokens: 65536 },
+      vip: { generations: 999999, dailyLimit: 999999, tokens: 65536 },
     }
     const planKey = user.plan as keyof typeof limits
     const userLimit = limits[planKey] || limits.none
