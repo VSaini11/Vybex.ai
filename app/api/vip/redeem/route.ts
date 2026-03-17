@@ -27,9 +27,9 @@ export async function POST(req: NextRequest) {
         const apiUrl = process.env.VYBE_STUDIO_API_URL;
 
         if (!apiKey || apiKey === 'YOUR_VYBE_STUDIO_API_KEY_HERE' || !apiUrl || apiUrl.includes('your-vybe-studio-url')) {
-            console.error('[VIP Redeem] Vybe Studio API not configured in .env.local');
+            console.error('[VIP Redeem] Vybe Studio API not configured');
             return NextResponse.json(
-                { error: 'VIP verification service is not configured yet. Please try again later.' },
+                { error: 'VIP verification service is not configured yet.' },
                 { status: 503 }
             );
         }
@@ -37,23 +37,35 @@ export async function POST(req: NextRequest) {
         // 4. Verify code with Vybe Studio
         let studioResponse: any;
         try {
+            console.log(`[VIP Redeem] Verifying code "${cleanCode}" for user ${decoded.email} at ${apiUrl}`);
+            
             const verifyRes = await fetch(apiUrl, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                     'x-api-key': apiKey,
                 },
-                body: JSON.stringify({ code: cleanCode }),
+                body: JSON.stringify({ 
+                    code: cleanCode,
+                    email: decoded.email // Crucial: coupons are often tied to specific emails
+                }),
             });
 
-            studioResponse = await verifyRes.json();
+            const responseText = await verifyRes.text();
+            console.log(`[VIP Redeem] Studio Status: ${verifyRes.status} | Response: ${responseText}`);
+
+            try {
+                studioResponse = JSON.parse(responseText);
+            } catch (pErr) {
+                studioResponse = { error: 'Failed to parse Studio response' };
+            }
 
             if (!verifyRes.ok) {
                 const errMsg = studioResponse?.error || 'Invalid coupon code';
                 return NextResponse.json({ error: errMsg }, { status: 400 });
             }
         } catch (fetchErr: any) {
-            console.error('[VIP Redeem] Failed to reach Vybe Studio:', fetchErr.message);
+            console.error('[VIP Redeem] Connection error:', fetchErr.message);
             return NextResponse.json(
                 { error: 'Could not connect to verification service. Please try again.' },
                 { status: 502 }
