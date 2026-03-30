@@ -18,6 +18,8 @@ export interface IUser extends Document {
     hasVipPass: boolean;
     vipPassRedeemedAt?: Date;
     vipCouponCode?: string;
+    resetPasswordToken?: string;
+    resetPasswordExpires?: Date;
     createdAt: Date;
 }
 
@@ -38,12 +40,14 @@ const UserSchema: Schema = new Schema({
     hasVipPass: { type: Boolean, default: false },
     vipPassRedeemedAt: { type: Date },
     vipCouponCode: { type: String },
+    resetPasswordToken: { type: String },
+    resetPasswordExpires: { type: Date },
     createdAt: { type: Date, default: Date.now },
 
 });
 
-// Force model re-registration in development if needed
-if (mongoose.models.User && !mongoose.models.User.schema.path('plan').enumValues.includes('none')) {
+// Force model re-registration in development to handle schema changes
+if (process.env.NODE_ENV === 'development') {
     delete mongoose.models.User;
 }
 
