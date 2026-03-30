@@ -52,14 +52,9 @@ export default function FinalCTA() {
               Vybex AI empowers founders and builders to ship conversion-ready landing pages in minutes.
             </p>
 
-            {/* Buttons */}
+            {/* Product Hunt Badge */}
             <div className="flex flex-col gap-3 mt-2">
-              <button
-                className="px-5 py-2.5 rounded-lg bg-accent text-background text-sm font-semibold hover:bg-accent/90 transition-all duration-200 text-left"
-                style={{ boxShadow: '0 0 20px rgba(0,255,65,0.2)' }}
-              >
-                Get Started
-              </button>
+              <a href="https://www.producthunt.com/products/vybex-ai/reviews/new?utm_source=badge-product_review&utm_medium=badge&utm_source=badge-vybex&#0045;ai" target="_blank"><img src="https://api.producthunt.com/widgets/embed-image/v1/product_review.svg?product_id=1192454&theme=light" alt="Vybex&#0032;AI - Your&#0032;all&#0045;in&#0045;one&#0032;AI&#0032;toolkit&#0032;for&#0032;creators&#0032;&#0038;&#0032;startups | Product Hunt" style={{ width: '250px', height: '54px' }} width="250" height="54" /></a>
             </div>
           </motion.div>
 
