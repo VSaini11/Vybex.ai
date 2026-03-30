@@ -75,9 +75,10 @@ function buildPreviewHtml(pageContent: string): string {
     (async function() {
       const el = document.getElementById('error-display');
       const showError = (msg) => { 
-        if (msg.includes('forwardRef')) return; // Suppress Lucide initialization warning
+        const errorMsg = typeof msg === 'string' ? msg : (msg?.message || String(msg));
+        if (errorMsg.includes('forwardRef')) return; // Suppress Lucide initialization warning
         el.style.display = 'block'; 
-        el.textContent = 'Preview Error: ' + msg; 
+        el.textContent = 'Preview Error: ' + errorMsg; 
       };
       
       window.onerror = (msg, url, line) => { showError(msg + " (Line " + line + ")"); };
@@ -86,7 +87,8 @@ function buildPreviewHtml(pageContent: string): string {
         return new Promise((resolve, reject) => {
           const s = document.createElement('script');
           s.src = src; s.crossOrigin = "anonymous";
-          s.onload = resolve; s.onerror = reject;
+          s.onload = resolve; 
+          s.onerror = () => reject(new Error('Failed to load script: ' + src));
           document.head.appendChild(s);
         });
       }
@@ -99,8 +101,8 @@ function buildPreviewHtml(pageContent: string): string {
         await new Promise(r => setTimeout(r, 50));
         
         await Promise.all([
-          loadScript("https://unpkg.com/framer-motion@11/dist/framer-motion.js"),
-          loadScript("https://unpkg.com/lucide-react@latest/dist/umd/lucide-react.js")
+          loadScript("https://unpkg.com/framer-motion@11.11.17/dist/framer-motion.js"),
+          loadScript("https://unpkg.com/lucide-react@0.469.0/dist/umd/lucide-react.js")
         ]);
 
         const rawSource = JSON.parse(document.getElementById('page-source').textContent);
