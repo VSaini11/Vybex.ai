@@ -24,7 +24,8 @@ export default function AdminPromotionsPage() {
 
     const fetchCards = async () => {
         try {
-            const res = await fetch('/api/admin/promotions');
+            // Add timestamp to bypass cache so admin always sees fresh data
+            const res = await fetch('/api/admin/promotions?t=' + Date.now());
             const data = await res.json();
             if (res.ok) {
                 setCards(data);

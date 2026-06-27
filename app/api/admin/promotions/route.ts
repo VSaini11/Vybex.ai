@@ -2,7 +2,8 @@ import { NextResponse } from 'next/server';
 import connectDB from '@/lib/mongodb';
 import PromotionCard from '@/models/PromotionCard';
 
-export const dynamic = 'force-dynamic'; // Prevent caching
+// Cache the API response at the edge for 60 seconds to make it load instantly
+export const revalidate = 60;
 
 export async function GET() {
     try {
