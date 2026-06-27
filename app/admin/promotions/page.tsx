@@ -46,41 +46,67 @@ export default function AdminPromotionsPage() {
         const file = e.target.files?.[0];
         if (!file) return;
 
-        if (file.size > 5 * 1024 * 1024) {
-            toast.error('Image size should be less than 5MB');
+        if (!title) {
+            toast.error('Please provide a title before uploading');
+            e.target.value = '';
             return;
         }
 
+        setUploading(true);
+
         const reader = new FileReader();
-        reader.onloadend = async () => {
-            const base64String = reader.result as string;
-            if (!title) {
-                toast.error('Please provide a title before uploading');
-                return;
-            }
+        reader.onload = (event) => {
+            const img = new Image();
+            img.onload = async () => {
+                const canvas = document.createElement('canvas');
+                const MAX_WIDTH = 1920;
+                const MAX_HEIGHT = 1080;
+                let width = img.width;
+                let height = img.height;
 
-            setUploading(true);
-            try {
-                const res = await fetch('/api/admin/promotions', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ title, image: base64String, order }),
-                });
-
-                if (res.ok) {
-                    toast.success('Card uploaded successfully');
-                    setTitle('');
-                    setOrder(0);
-                    fetchCards();
+                if (width > height) {
+                    if (width > MAX_WIDTH) {
+                        height *= MAX_WIDTH / width;
+                        width = MAX_WIDTH;
+                    }
                 } else {
-                    const data = await res.json();
-                    toast.error(data.error || 'Failed to upload card');
+                    if (height > MAX_HEIGHT) {
+                        width *= MAX_HEIGHT / height;
+                        height = MAX_HEIGHT;
+                    }
                 }
-            } catch (error) {
-                toast.error('Error uploading card');
-            } finally {
-                setUploading(false);
-            }
+
+                canvas.width = width;
+                canvas.height = height;
+                const ctx = canvas.getContext('2d');
+                ctx?.drawImage(img, 0, 0, width, height);
+
+                // Compress image to fit well within Vercel's 4.5MB limit
+                const base64String = canvas.toDataURL('image/webp', 0.8);
+
+                try {
+                    const res = await fetch('/api/admin/promotions', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ title, image: base64String, order }),
+                    });
+
+                    if (res.ok) {
+                        toast.success('Card uploaded successfully');
+                        setTitle('');
+                        setOrder(0);
+                        fetchCards();
+                    } else {
+                        const data = await res.json();
+                        toast.error(data.error || 'Failed to upload card');
+                    }
+                } catch (error) {
+                    toast.error('Error uploading card');
+                } finally {
+                    setUploading(false);
+                }
+            };
+            img.src = event.target?.result as string;
         };
         reader.readAsDataURL(file);
     };
