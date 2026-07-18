@@ -22,6 +22,7 @@ export default function LoginPage() {
     const [loading, setLoading] = useState(false);
     const [showEmailForm, setShowEmailForm] = useState(false);
     const [cards, setCards] = useState<PromotionCard[]>([]);
+    const [isLoadingCards, setIsLoadingCards] = useState(true);
     
     const router = useRouter();
     const [emblaRef, emblaApi] = useEmblaCarousel({ loop: true });
@@ -36,6 +37,8 @@ export default function LoginPage() {
                 }
             } catch (e) {
                 console.error('Failed to load promotions');
+            } finally {
+                setIsLoadingCards(false);
             }
         };
         fetchCards();
@@ -186,7 +189,9 @@ export default function LoginPage() {
                 {/* Carousel Container */}
                 <div className="w-full h-full relative rounded-[2rem] overflow-hidden" ref={emblaRef}>
                     <div className="flex touch-pan-y h-full">
-                        {cards.length > 0 ? (
+                        {isLoadingCards ? (
+                            <div className="flex-[0_0_100%] min-w-0 h-full bg-zinc-900/50 animate-pulse rounded-[2rem]"></div>
+                        ) : cards.length > 0 ? (
                             cards.map((card) => (
                                 <div className="flex-[0_0_100%] min-w-0 h-full relative" key={card._id}>
                                     {/* eslint-disable-next-line @next/next/no-img-element */}

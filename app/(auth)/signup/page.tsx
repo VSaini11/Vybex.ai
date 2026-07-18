@@ -21,13 +21,8 @@ export default function SignupPage() {
     const [password, setPassword] = useState('');
     const [loading, setLoading] = useState(false);
     const [showEmailForm, setShowEmailForm] = useState(false);
-    const staticCards: PromotionCard[] = [
-        { _id: 'static-1', title: 'Showcase 1', image: '/1.png', order: -3 },
-        { _id: 'static-2', title: 'Showcase 2', image: '/2.png', order: -2 },
-        { _id: 'static-3', title: 'Showcase 3', image: '/3.png', order: -1 },
-    ];
-
-    const [cards, setCards] = useState<PromotionCard[]>(staticCards);
+    const [cards, setCards] = useState<PromotionCard[]>([]);
+    const [isLoadingCards, setIsLoadingCards] = useState(true);
     
     const router = useRouter();
     const [emblaRef, emblaApi] = useEmblaCarousel({ loop: true });
@@ -38,10 +33,12 @@ export default function SignupPage() {
                 const res = await fetch('/api/admin/promotions');
                 if (res.ok) {
                     const data = await res.json();
-                    setCards([...staticCards, ...data]);
+                    setCards(data);
                 }
             } catch (e) {
                 console.error('Failed to load promotions');
+            } finally {
+                setIsLoadingCards(false);
             }
         };
         fetchCards();
@@ -178,60 +175,45 @@ export default function SignupPage() {
             </div>
 
             {/* Right Side: Promotion Carousel */}
-            <div className="hidden lg:flex flex-1 relative bg-gradient-to-br from-cyan-900 via-blue-900 to-indigo-950 overflow-hidden flex-col items-center justify-center p-12">
-                {/* Abstract background blur shapes */}
-                <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-emerald-500/20 rounded-full blur-[100px]" />
-                <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-blue-500/20 rounded-full blur-[100px]" />
-
-                <div className="relative z-10 text-center mb-12">
-                    <div className="flex items-center justify-center gap-4 mb-4 text-emerald-400">
-                        <svg className="w-8 h-12 opacity-50" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
-                        <h2 className="text-5xl font-bold text-white tracking-tight">10M+ users</h2>
-                        <svg className="w-8 h-12 opacity-50" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
-                    </div>
-                    <p className="text-lg text-blue-100 font-medium max-w-sm mx-auto">
-                        worldwide building & launching real applications in minutes.
-                    </p>
-                </div>
-
+            <div className="hidden lg:block lg:w-[55%] xl:w-[60%] p-4 lg:p-6 relative bg-[#0a0a0a]">
                 {/* Carousel Container */}
-                <div className="w-full max-w-2xl relative z-10">
-                    <div className="overflow-hidden rounded-2xl shadow-2xl bg-black/40 border border-white/10 backdrop-blur-sm" ref={emblaRef}>
-                        <div className="flex touch-pan-y">
-                            {cards.length > 0 ? (
-                                cards.map((card) => (
-                                    <div className="flex-[0_0_100%] min-w-0 relative aspect-[16/10]" key={card._id}>
-                                        {/* eslint-disable-next-line @next/next/no-img-element */}
-                                        <img 
-                                            src={card.image} 
-                                            alt={card.title} 
-                                            className="w-full h-full object-cover"
-                                        />
-                                    </div>
-                                ))
-                            ) : (
-                                <div className="flex-[0_0_100%] min-w-0 aspect-[16/10] bg-zinc-900/50 flex flex-col items-center justify-center text-zinc-500">
-                                    <p>No promotions active</p>
-                                    <p className="text-sm mt-2">Upload cards in the Admin panel</p>
+                <div className="w-full h-full relative rounded-[2rem] overflow-hidden" ref={emblaRef}>
+                    <div className="flex touch-pan-y h-full">
+                        {isLoadingCards ? (
+                            <div className="flex-[0_0_100%] min-w-0 h-full bg-zinc-900/50 animate-pulse rounded-[2rem]"></div>
+                        ) : cards.length > 0 ? (
+                            cards.map((card) => (
+                                <div className="flex-[0_0_100%] min-w-0 h-full relative" key={card._id}>
+                                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                                    <img 
+                                        src={card.image} 
+                                        alt={card.title} 
+                                        className="w-full h-full object-cover"
+                                    />
                                 </div>
-                            )}
-                        </div>
+                            ))
+                        ) : (
+                            <div className="flex-[0_0_100%] min-w-0 h-full bg-zinc-900 flex flex-col items-center justify-center text-zinc-500 rounded-[2rem]">
+                                <p>No promotions active</p>
+                                <p className="text-sm mt-2">Upload cards in the Admin panel</p>
+                            </div>
+                        )}
                     </div>
                     
-                    {/* Carousel Controls */}
+                    {/* Carousel Controls Overlay */}
                     {cards.length > 1 && (
-                        <div className="flex items-center justify-center gap-4 mt-6">
-                            <button onClick={scrollPrev} className="p-2 rounded-full bg-white/10 hover:bg-white/20 text-white backdrop-blur-md transition-colors">
+                        <div className="absolute bottom-8 left-1/2 -translate-x-1/2 flex items-center justify-center gap-4 z-10">
+                            <button onClick={scrollPrev} className="p-2 rounded-full bg-black/40 hover:bg-black/60 text-white backdrop-blur-md transition-colors border border-white/10">
                                 <ArrowLeft className="w-4 h-4" />
                             </button>
-                            <div className="flex gap-1.5">
+                            <div className="flex gap-2">
                                 {cards.map((_, i) => (
-                                    <div key={i} className="w-8 h-1.5 rounded-full bg-white/20 overflow-hidden">
+                                    <div key={i} className="w-8 h-1.5 rounded-full bg-white/30 overflow-hidden shadow-sm">
                                         <div className="h-full w-0 bg-white" />
                                     </div>
                                 ))}
                             </div>
-                            <button onClick={scrollNext} className="p-2 rounded-full bg-white/10 hover:bg-white/20 text-white backdrop-blur-md transition-colors">
+                            <button onClick={scrollNext} className="p-2 rounded-full bg-black/40 hover:bg-black/60 text-white backdrop-blur-md transition-colors border border-white/10">
                                 <ArrowRight className="w-4 h-4" />
                             </button>
                         </div>
