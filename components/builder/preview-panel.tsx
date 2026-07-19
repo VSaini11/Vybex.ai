@@ -100,6 +100,9 @@ function buildPreviewHtml(pageContent: string): string {
         // Brief pause to ensure React is fully settled globally before Lucide
         await new Promise(r => setTimeout(r, 50));
         
+        // Lucide-react UMD bundle looks for global.react (lowercase), so we alias it
+        window.react = window.React;
+
         await Promise.all([
           loadScript("https://unpkg.com/framer-motion@11.11.17/dist/framer-motion.js"),
           loadScript("https://unpkg.com/lucide-react@0.469.0/dist/umd/lucide-react.js")
@@ -129,11 +132,9 @@ function buildPreviewHtml(pageContent: string): string {
 
         const componentName = (rawSource.match(/export\\s+default\\s+(?:(?:function|class|const)\\s+)?(\\w+)?/) || [])[1];
 
-        // 2. Transform page code (Clean imports + Fix Next.js style tags + Escape math symbols)
+        // 2. Transform page code (Fix Next.js style tags + Escape math symbols)
         const moduleCode = rawSource
-          .replace(/^(?:\\s*['"]?use client['"]?;?\\s*)+/gi, '')
-          .replace(/^\\s*import\\b[\\s\\S]*?from\\s+['"].*?['"];?/gm, '')
-          .replace(/^\\s*import\\s+['"].*?['"];?/gm, '')
+          .replace(/(?:\\s*['"]?use client['"]?;?\\s*)+/gi, '')
           .replace(/export\\s+default\\s+/g, '/* export default */ ')
           .replace(/export\\s+(?!default)/g, '/* export */ ')
           .replace(/<style\\s+jsx[^>]*>([\\s\\S]*?)<\\/style>/gi, '<style>$1</style>') // Fix <style jsx> warnings
@@ -141,13 +142,29 @@ function buildPreviewHtml(pageContent: string): string {
           // Match "..." that might be malformed in tags
           .replace(/\\{\\s*\\.\\.\\.\\s*\\}/g, ''); 
 
+        Babel.registerPlugin('remove-imports', function() {
+          return {
+            visitor: {
+              ImportDeclaration: function(path) {
+                path.remove();
+              }
+            }
+          };
+        });
+
+        const compiledModule = Babel.transform(moduleCode, { 
+          presets: ['typescript', ['react', { runtime: 'classic' }]], 
+          plugins: ['remove-imports'], 
+          filename: 'page.tsx' 
+        }).code;
+
         const wrappedCode = \`
           (function() {
             try {
               \${mappings}
               var { useState, useEffect, useRef, useMemo, useCallback, useLayoutEffect } = React;
               
-              \${moduleCode}
+              \${compiledModule}
               
               let __Found = typeof \${componentName || 'null'} === 'function' ? \${componentName} : null;
               if (!__Found && window["\${componentName}"]) __Found = window["\${componentName}"];
@@ -165,9 +182,7 @@ function buildPreviewHtml(pageContent: string): string {
             }
           })();
         \`;
-
-        const transformed = Babel.transform(wrappedCode, { presets: ['typescript', 'react'], filename: 'page.tsx' }).code;
-        eval(transformed);
+        eval(wrappedCode);
       } catch (e) {
         showError(e.message);
         console.error('Core Error:', e);
