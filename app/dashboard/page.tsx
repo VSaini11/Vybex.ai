@@ -1,14 +1,14 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { toast } from 'sonner';
-import { Zap, Shield, Crown, LogOut, Loader2, ArrowRight, Check, Gift, Sparkles } from 'lucide-react';
+import { Zap, Shield, Crown, LogOut, Loader2, ArrowRight, Check, Gift, Sparkles, CheckCircle2 } from 'lucide-react';
 
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 
 declare global {
     interface Window {
@@ -25,6 +25,9 @@ export default function DashboardPage() {
     const [vipLoading, setVipLoading] = useState(false);
 
     const router = useRouter();
+    const searchParams = useSearchParams();
+    const isPaymentSuccess = searchParams.get('payment') === 'success';
+    const purchasedPlan = searchParams.get('plan');
 
     useEffect(() => {
         const fetchUser = async () => {
@@ -120,6 +123,9 @@ export default function DashboardPage() {
                 order_id: orderData.id,
                 handler: async function (response: any) {
                     toast.success('Payment captured! Updating your plan...');
+                    // Redirect to dashboard with tracking parameters for analytics tools (Google Analytics, Pixels, etc.)
+                    router.push(`/dashboard?payment=success&plan=${plan}`);
+
                     let attempts = 0;
                     const interval = setInterval(async () => {
                         attempts++;
@@ -179,6 +185,40 @@ export default function DashboardPage() {
                         </Button>
                     </div>
                 </div>
+
+                {/* Payment Success Banner for Tracking & User Feedback */}
+                <AnimatePresence>
+                    {isPaymentSuccess && (
+                        <motion.div
+                            initial={{ opacity: 0, y: -16, scale: 0.98 }}
+                            animate={{ opacity: 1, y: 0, scale: 1 }}
+                            exit={{ opacity: 0, y: -16 }}
+                            className="mb-8 p-4 md:p-5 rounded-2xl border border-green-500/30 bg-green-500/10 backdrop-blur-md flex items-center justify-between gap-4"
+                        >
+                            <div className="flex items-center gap-3">
+                                <div className="h-10 w-10 rounded-xl bg-green-500/20 border border-green-500/40 flex items-center justify-center text-green-400 shrink-0">
+                                    <CheckCircle2 className="h-5 w-5" />
+                                </div>
+                                <div>
+                                    <h4 className="text-sm md:text-base font-bold text-green-300 tracking-tight">
+                                        Subscription Activated Successfully!
+                                    </h4>
+                                    <p className="text-xs text-zinc-400">
+                                        Your {purchasedPlan ? purchasedPlan.replace('_', ' ').toUpperCase() : 'new'} plan is active and ready to use.
+                                    </p>
+                                </div>
+                            </div>
+                            <Button
+                                size="sm"
+                                variant="ghost"
+                                onClick={() => router.replace('/dashboard')}
+                                className="text-xs text-zinc-400 hover:text-white hover:bg-green-500/10"
+                            >
+                                Dismiss
+                            </Button>
+                        </motion.div>
+                    )}
+                </AnimatePresence>
 
                 {/* VIP Pass Section */}
                 <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="mb-8">
